@@ -19,7 +19,7 @@ export default function MantineProviderClient({ children }: MantineProviderClien
   return (
     <>
       <ColorSchemeScript defaultColorScheme="light" />
-      <MantineProvider defaultColorScheme="light">
+      <MantineProvider defaultColorScheme="light" >
         <Notifications />
         <AuthProvider>
           {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}

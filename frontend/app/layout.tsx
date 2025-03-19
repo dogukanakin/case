@@ -34,7 +34,7 @@ export default function RootLayout({
       <head>
         {/* ColorSchemeScript artık MantineProviderClient içinde */}
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <MantineProviderClient>
           {children}
         </MantineProviderClient>
