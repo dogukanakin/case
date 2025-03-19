@@ -14,4 +14,9 @@ export interface RegisterCredentials {
   username: string;
   email: string;
   password: string;
+}
+
+export interface PasswordChangeCredentials {
+  currentPassword: string;
+  newPassword: string;
 } 

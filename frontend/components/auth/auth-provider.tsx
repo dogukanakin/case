@@ -2,8 +2,20 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
-import { loginUser, registerUser, logoutUser, getCurrentUser, isAuthenticated } from '@/lib/auth'
-import { User, LoginCredentials, RegisterCredentials } from '@/types/auth'
+import { 
+  loginUser, 
+  registerUser, 
+  logoutUser, 
+  getCurrentUser, 
+  isAuthenticated,
+  changePassword 
+} from '@/lib/auth'
+import { 
+  User, 
+  LoginCredentials, 
+  RegisterCredentials, 
+  PasswordChangeCredentials 
+} from '@/types/auth'
 
 interface AuthContextType {
   user: User | null;
@@ -12,6 +24,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
+  changeUserPassword: (credentials: PasswordChangeCredentials) => Promise<void>;
   isAuth: boolean;
 }
 
@@ -98,6 +111,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     router.push('/login')
   }
 
+  const changeUserPassword = async (credentials: PasswordChangeCredentials) => {
+    setLoading(true)
+    setError(null)
+    
+    try {
+      const result = await changePassword(credentials)
+      // Kullanıcı bilgilerini güncelle (şifresi dışında)
+      if (result.user) {
+        setUser(result.user)
+      }
+      return result
+    } catch (err: any) {
+      setError(err.message || 'Şifre değiştirme başarısız oldu')
+      throw err
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const value = {
     user,
     loading,
@@ -105,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     register,
     logout,
+    changeUserPassword,
     isAuth,
   }
 

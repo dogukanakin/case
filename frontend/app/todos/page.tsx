@@ -64,9 +64,22 @@ export default function TodosPage() {
             <Title order={2}>Your To-Do List</Title>
             <Text size="sm" color="dimmed">Welcome back, {username}!</Text>
           </div>
-          <Button onClick={handleLogout} color="red" variant="outline">
-            Logout
-          </Button>
+          <div className="flex space-x-2">
+            <Button 
+              onClick={() => router.push('/profile')} 
+              color="blue" 
+              variant="outline"
+            >
+              Profil
+            </Button>
+            <Button 
+              onClick={handleLogout} 
+              color="red" 
+              variant="outline"
+            >
+              Logout
+            </Button>
+          </div>
         </div>
         
         <Card shadow="sm" p="lg" radius="md" withBorder className="mb-4">

@@ -1,5 +1,5 @@
 import api from './api';
-import { LoginCredentials, RegisterCredentials, User } from '@/types/auth';
+import { LoginCredentials, RegisterCredentials, User, PasswordChangeCredentials } from '@/types/auth';
 
 // Cookie helpers - HTTP Only olmayan bir cookie ayarlama (middleware erişebilmeli)
 const setCookie = (name: string, value: string, days: number) => {
@@ -132,4 +132,41 @@ export const isAuthenticated = (): boolean => {
     return !!localStorage.getItem('token');
   }
   return false;
+};
+
+// Change user password
+export const changePassword = async (credentials: PasswordChangeCredentials): Promise<{ message: string; user: User }> => {
+  try {
+    const response = await api.put('/auth/change-password', credentials);
+    return response.data;
+  } catch (error: any) {
+    // Hata mesajı hazırlama
+    let message = 'Şifre değiştirme işlemi başarısız oldu. Lütfen daha sonra tekrar deneyin.';
+    
+    // API'den gelen hata durumlarına göre mesaj
+    if (error.response) {
+      const status = error.response.status;
+      const data = error.response.data;
+      
+      if (status === 401) {
+        if (data && data.error === 'Current password is incorrect') {
+          message = 'Mevcut şifreniz yanlış. Lütfen tekrar deneyin.';
+        } else {
+          message = 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
+        }
+      } else if (status === 400) {
+        if (data && data.error) {
+          message = data.error;
+        } else {
+          message = 'Geçersiz şifre bilgileri. Şifreniz en az 6 karakter olmalıdır.';
+        }
+      }
+    }
+    
+    // Tüm hatalar için tek bir hata nesnesi oluştur
+    const customError = new Error(message);
+    // Hata sınıfını ezme
+    customError.name = 'AuthError';
+    throw customError;
+  }
 }; 

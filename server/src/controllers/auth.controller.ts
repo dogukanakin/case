@@ -107,4 +107,60 @@ export const getUserProfile = async (req: Request, res: Response) => {
     console.error('Error in getUserProfile:', error);
     res.status(500).json({ error: 'Server error when fetching profile' });
   }
+};
+
+// @desc    Change user password
+// @route   PUT /api/auth/change-password
+// @access  Private
+export const changePassword = async (req: Request, res: Response) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ error: 'Not authorized' });
+    }
+
+    const { currentPassword, newPassword } = req.body;
+
+    // Check if current password and new password are provided
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ 
+        error: 'Please provide current password and new password' 
+      });
+    }
+
+    // Check if new password meets requirements
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        error: 'New password must be at least 6 characters long' 
+      });
+    }
+
+    // Find user with password included
+    const user = await User.findById(req.user._id);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Verify current password
+    const isMatch = await user.comparePassword(currentPassword);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Current password is incorrect' });
+    }
+
+    // Set new password
+    user.password = newPassword;
+    await user.save();
+
+    res.status(200).json({ 
+      message: 'Password changed successfully',
+      user: {
+        _id: user._id,
+        username: user.username,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    console.error('Error in changePassword:', error);
+    res.status(500).json({ error: 'Server error when changing password' });
+  }
 }; 
