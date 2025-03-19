@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Title, Text, Container, Card, Loader, Alert, Paper, Group, Tabs, Badge, ActionIcon, Transition, Box, Pagination } from '@mantine/core'
-import { IconAlertCircle, IconUser, IconLogout, IconFilter, IconCheck, IconClock, IconList, IconX, IconArrowUp, IconArrowDown } from '@tabler/icons-react'
+import { Button, Title, Text, Container, Card, Loader, Alert, Paper, Group, Tabs, Badge, ActionIcon, Transition, Box, Pagination, TextInput } from '@mantine/core'
+import { IconAlertCircle, IconUser, IconLogout, IconFilter, IconCheck, IconClock, IconList, IconX, IconArrowUp, IconArrowDown, IconSearch } from '@tabler/icons-react'
 import { isAuthenticated, logoutUser, getCurrentUser } from '@/lib/auth'
 import { getTodos } from '@/lib/todo'
 import { Todo, Priority } from '@/types/todo'
 import AddTodoForm from '@/components/add-todo-form'
 import TodoItem from '@/components/todo-item'
 import React from 'react'
+import { useDebouncedValue } from '@mantine/hooks'
 
 export default function TodosPage() {
   const [loading, setLoading] = useState(true)
@@ -24,6 +25,8 @@ export default function TodosPage() {
   const [totalAll, setTotalAll] = useState(0)
   const [totalActive, setTotalActive] = useState(0)
   const [totalCompleted, setTotalCompleted] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [debouncedSearchQuery] = useDebouncedValue(searchQuery, 500)
   const router = useRouter()
   
   // Tab, priority veya sayfa değiştiğinde todo'ları getirmek için effect
@@ -31,7 +34,7 @@ export default function TodosPage() {
     if (isAuthenticated()) {
       fetchTodos();
     }
-  }, [activeTab, selectedPriority, currentPage]);
+  }, [activeTab, selectedPriority, currentPage, debouncedSearchQuery]);
   
   useEffect(() => {
     // Check if the user is authenticated on component mount
@@ -80,7 +83,8 @@ export default function TodosPage() {
         status, 
         priority: selectedPriority, 
         page: currentPage, 
-        limit: 3 
+        limit: 3,
+        search: searchQuery
       });
       
       setTodos(response.todos);
@@ -121,16 +125,18 @@ export default function TodosPage() {
   }
   
   // Filtre değişiklikleri için tek bir fonksiyon
-  const applyFilters = (tabValue?: string, priorityValue?: Priority | null, pageValue?: number) => {
+  const applyFilters = (tabValue?: string, priorityValue?: Priority | null, pageValue?: number, searchValue?: string) => {
     // Mevcut değerleri kullan veya parametreyle geçilenleri kullan
     const newTab = tabValue !== undefined ? tabValue : activeTab;
     const newPriority = priorityValue !== undefined ? priorityValue : selectedPriority;
     const newPage = pageValue !== undefined ? pageValue : currentPage;
+    const newSearch = searchValue !== undefined ? searchValue : searchQuery;
     
     // State güncellemelerini batch olarak yap
     setActiveTab(newTab);
     setSelectedPriority(newPriority);
     setCurrentPage(newPage);
+    if (searchValue !== undefined) setSearchQuery(searchValue);
     
     // Manuel olarak verileri getir (useEffect'i beklemek yerine)
     const status = newTab !== 'all' ? newTab as 'active' | 'completed' : undefined;
@@ -140,7 +146,8 @@ export default function TodosPage() {
       status, 
       priority: newPriority, 
       page: newPage, 
-      limit: 3 
+      limit: 3,
+      search: newSearch 
     }).then(response => {
       setTodos(response.todos);
       setTotalPages(response.pagination.pages);
@@ -159,18 +166,29 @@ export default function TodosPage() {
   // Handle tab change
   const handleTabChange = (value: string | null) => {
     if (value) {
-      applyFilters(value, null, 1); // Tab değiştiğinde priority'yi null yap ve sayfa 1'e dön
+      applyFilters(value, null, 1, ''); // Tab değiştiğinde priority'yi null yap ve sayfa 1'e dön ve arama alanını da temizle
     }
   };
   
   // Handle page change
   const handlePageChange = (newPage: number) => {
-    applyFilters(undefined, undefined, newPage); // Sadece sayfa değiştir
+    applyFilters(undefined, undefined, newPage, undefined); // Sadece sayfa değiştir
   };
   
   // Önce sayfayı resetle sonra filtreyi değiştir
   const handlePriorityChange = (priority: Priority | null) => {
-    applyFilters(undefined, priority, 1); // Öncelik değiştiğinde sayfa 1'e dön
+    applyFilters(undefined, priority, 1, undefined); // Öncelik değiştiğinde sayfa 1'e dön
+  };
+  
+  // Arama değeri değiştiğinde, sayfa 1'e dön
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(event.currentTarget.value);
+    setCurrentPage(1); // Arama yapıldığında sayfa 1'e dön
+  };
+  
+  // Arama temizleme
+  const handleClearSearch = () => {
+    applyFilters(undefined, undefined, 1, '');
   };
   
   // Tamamlanan ve aktif todo sayılarını hesapla (genel toplam için)
@@ -232,6 +250,30 @@ export default function TodosPage() {
       
       <Container size="md" className="pb-12">
         <AddTodoForm onAddTodo={handleAddTodo} />
+        
+        <div className="mb-4">
+          <TextInput
+            placeholder="Search todos by title, description or tags..."
+            value={searchQuery}
+            onChange={handleSearchChange}
+            size="md"
+            radius="md"
+            leftSection={<IconSearch size={16} />}
+            rightSection={
+              searchQuery ? (
+                <ActionIcon
+                  size="sm"
+                  radius="xl"
+                  variant="transparent"
+                  onClick={handleClearSearch}
+                  color="gray"
+                >
+                  <IconX size={16} />
+                </ActionIcon>
+              ) : null
+            }
+          />
+        </div>
         
         {error && (
           <Alert 
@@ -420,6 +462,28 @@ export default function TodosPage() {
           )}
         </Transition>
           
+        {searchQuery && todos.length > 0 && (
+          <Alert
+            color="blue"
+            variant="light"
+            className="mb-4"
+            withCloseButton={false}
+          >
+            Found {totalTodos} result{totalTodos !== 1 ? "s" : ""} for "{searchQuery}"
+          </Alert>
+        )}
+        
+        {searchQuery && todos.length === 0 && !loading && (
+          <Alert
+            color="yellow"
+            variant="light"
+            className="mb-4"
+            withCloseButton={false}
+          >
+            No results found for "{searchQuery}". Try different keywords.
+          </Alert>
+        )}
+        
         {todos.length === 0 && !loading && (
           <Paper shadow="sm" p="xl" withBorder className="mt-8 text-center">
             <IconList size={48} className="text-gray-300 mx-auto mb-4" />

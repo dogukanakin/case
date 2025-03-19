@@ -6,6 +6,7 @@ interface TodoFilterParams {
   priority?: Priority | null;
   page?: number;
   limit?: number;
+  search?: string;
 }
 
 interface TodosResponse {
@@ -24,7 +25,7 @@ interface TodosResponse {
 }
 
 // Get all todos for the logged-in user with filters and pagination
-export const getTodos = async ({ status, priority, page = 1, limit = 3 }: TodoFilterParams = {}): Promise<TodosResponse> => {
+export const getTodos = async ({ status, priority, page = 1, limit = 3, search }: TodoFilterParams = {}): Promise<TodosResponse> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -39,6 +40,9 @@ export const getTodos = async ({ status, priority, page = 1, limit = 3 }: TodoFi
     }
     if (priority) {
       params.append('priority', priority);
+    }
+    if (search && search.trim()) {
+      params.append('search', search.trim());
     }
     
     // Sayfalama parametrelerini ekle

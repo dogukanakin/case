@@ -15,6 +15,7 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
     // Query parametrelerini al
     const status = req.query.status as string; // 'active', 'completed', veya undefined
     const priority = req.query.priority as Priority | undefined;
+    const searchQuery = req.query.search as string | undefined;
     
     // Sayfalama parametrelerini al
     const page = parseInt(req.query.page as string) || 1;
@@ -34,6 +35,16 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
     // Priority filtresi ekle
     if (priority) {
       query.priority = priority;
+    }
+    
+    // Arama sorgusu ekle - başlık veya açıklamada metin araması
+    if (searchQuery && searchQuery.trim()) {
+      const searchRegex = new RegExp(searchQuery.trim(), 'i'); // case-insensitive regex
+      query.$or = [
+        { title: searchRegex },
+        { description: searchRegex },
+        { tags: searchRegex } // Opsiyonel: etiketlerde de arama yap
+      ];
     }
 
     // Filtrelenmiş todo'ların toplam sayısını bul
