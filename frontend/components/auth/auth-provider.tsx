@@ -24,7 +24,7 @@ interface AuthContextType {
   login: (credentials: LoginCredentials) => Promise<void>;
   register: (credentials: RegisterCredentials) => Promise<void>;
   logout: () => void;
-  changeUserPassword: (credentials: PasswordChangeCredentials) => Promise<void>;
+  changeUserPassword: (credentials: PasswordChangeCredentials) => Promise<{ message: string; user: User }>;
   isAuth: boolean;
 }
 

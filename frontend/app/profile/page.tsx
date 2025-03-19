@@ -94,10 +94,8 @@ export default function ProfilePage() {
       const result = await changeUserPassword({ currentPassword, newPassword })
       
       // Kullanıcı bilgilerini güncelle
-      if (result.user) {
-        setUserData(result.user)
-      }
-      
+      const updatedUser = await getCurrentUser(); // Fetch updated user data
+      setUserData(updatedUser);
       setSuccess('Şifreniz başarıyla değiştirildi')
       reset() // Formu sıfırla
       
@@ -226,12 +224,12 @@ export default function ProfilePage() {
           
           <div className="space-y-2">
             <div>
-              <Text weight={500}>Kullanıcı Adı:</Text>
+              <Text className="font-semibold">Kullanıcı Adı:</Text>
               <Text>{userData?.username}</Text>
             </div>
             
             <div>
-              <Text weight={500}>E-posta:</Text>
+              <Text className="font-semibold">E-posta:</Text>
               <Text>{userData?.email}</Text>
             </div>
           </div>
