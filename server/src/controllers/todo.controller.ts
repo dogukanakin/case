@@ -12,8 +12,59 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const todos = await Todo.find({ user: userId }).sort({ createdAt: -1 });
-    res.status(200).json(todos);
+    // Query parametrelerini al
+    const status = req.query.status as string; // 'active', 'completed', veya undefined
+    const priority = req.query.priority as Priority | undefined;
+    
+    // Sayfalama parametrelerini al
+    const page = parseInt(req.query.page as string) || 1;
+    const limit = parseInt(req.query.limit as string) || 3;
+    const skip = (page - 1) * limit;
+    
+    // Temel sorgu - kullanıcıya ait todo'lar
+    let query: any = { user: userId };
+    
+    // Status filtresi ekle
+    if (status === 'active') {
+      query.completed = false;
+    } else if (status === 'completed') {
+      query.completed = true;
+    }
+    
+    // Priority filtresi ekle
+    if (priority) {
+      query.priority = priority;
+    }
+
+    // Filtrelenmiş todo'ların toplam sayısını bul
+    const totalTodos = await Todo.countDocuments(query);
+    
+    // Tüm sekmelerin sayılarını hesapla
+    const totalAll = await Todo.countDocuments({ user: userId });
+    const totalActive = await Todo.countDocuments({ user: userId, completed: false });
+    const totalCompleted = await Todo.countDocuments({ user: userId, completed: true });
+    
+    // Sayfaya göre todo'ları getir
+    const todos = await Todo.find(query)
+      .sort({ createdAt: -1 }) // Tarihe göre sırala - en yeni en üstte
+      .skip(skip)
+      .limit(limit);
+    
+    // Meta verilerle birlikte sonuçları döndür
+    res.status(200).json({
+      todos,
+      pagination: {
+        total: totalTodos,
+        page,
+        limit,
+        pages: Math.ceil(totalTodos / limit)
+      },
+      counts: {
+        all: totalAll,
+        active: totalActive,
+        completed: totalCompleted
+      }
+    });
   } catch (error) {
     console.error('Error fetching todos:', error);
     res.status(500).json({ message: 'Server error', error: (error as Error).message });

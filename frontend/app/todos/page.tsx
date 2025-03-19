@@ -2,13 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Button, Title, Text, Container, Card, Loader, Alert, Paper, Group, Tabs, Badge, ActionIcon, Transition, Box } from '@mantine/core'
-import { IconAlertCircle, IconUser, IconLogout, IconFilter, IconCheck, IconClock, IconList, IconX } from '@tabler/icons-react'
+import { Button, Title, Text, Container, Card, Loader, Alert, Paper, Group, Tabs, Badge, ActionIcon, Transition, Box, Pagination } from '@mantine/core'
+import { IconAlertCircle, IconUser, IconLogout, IconFilter, IconCheck, IconClock, IconList, IconX, IconArrowUp, IconArrowDown } from '@tabler/icons-react'
 import { isAuthenticated, logoutUser, getCurrentUser } from '@/lib/auth'
 import { getTodos } from '@/lib/todo'
 import { Todo, Priority } from '@/types/todo'
 import AddTodoForm from '@/components/add-todo-form'
 import TodoItem from '@/components/todo-item'
+import React from 'react'
 
 export default function TodosPage() {
   const [loading, setLoading] = useState(true)
@@ -17,7 +18,20 @@ export default function TodosPage() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<string>("all")
   const [selectedPriority, setSelectedPriority] = useState<Priority | null>(null)
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [totalTodos, setTotalTodos] = useState(0)
+  const [totalAll, setTotalAll] = useState(0)
+  const [totalActive, setTotalActive] = useState(0)
+  const [totalCompleted, setTotalCompleted] = useState(0)
   const router = useRouter()
+  
+  // Tab, priority veya sayfa değiştiğinde todo'ları getirmek için effect
+  useEffect(() => {
+    if (isAuthenticated()) {
+      fetchTodos();
+    }
+  }, [activeTab, selectedPriority, currentPage]);
   
   useEffect(() => {
     // Check if the user is authenticated on component mount
@@ -41,9 +55,6 @@ export default function TodosPage() {
           const userData = await getCurrentUser()
           setUsername(userData.username || 'User')
         }
-        
-        // Fetch todos
-        await fetchTodos()
       } catch (e) {
         console.error('Error getting user data:', e)
         setUsername('User')
@@ -58,59 +69,121 @@ export default function TodosPage() {
   
   const fetchTodos = async () => {
     try {
-      setError(null)
-      const todoData = await getTodos()
-      setTodos(todoData)
+      setLoading(true);
+      setError(null);
+      
+      // Filtreleme parametrelerini hazırla
+      const status = activeTab !== 'all' ? activeTab as 'active' | 'completed' : undefined;
+      
+      // Server'dan filtrelenmiş todo'ları getir
+      const response = await getTodos({ 
+        status, 
+        priority: selectedPriority, 
+        page: currentPage, 
+        limit: 3 
+      });
+      
+      setTodos(response.todos);
+      setTotalPages(response.pagination.pages);
+      setTotalTodos(response.pagination.total);
+      
+      // Sekme sayılarını güncelle
+      setTotalAll(response.counts.all);
+      setTotalActive(response.counts.active);
+      setTotalCompleted(response.counts.completed);
     } catch (error) {
-      console.error('Error fetching todos:', error)
-      setError('Failed to load todos. Please try again.')
+      console.error('Error fetching todos:', error);
+      setError('Failed to load todos. Please try again.');
+    } finally {
+      setLoading(false);
     }
+  };
+  
+  const handleAddTodo = async (newTodo: Todo) => {
+    // Todo ekledikten sonra sayfa 1'e dön ve listeyi yenile
+    setCurrentPage(1);
+    await fetchTodos();
   }
   
-  const handleAddTodo = (newTodo: Todo) => {
-    setTodos(prevTodos => [newTodo, ...prevTodos])
+  const handleUpdateTodo = async (updatedTodo: Todo) => {
+    // Todo güncelledikten sonra güncel listeyi tekrar çek
+    await fetchTodos();
   }
   
-  const handleUpdateTodo = (updatedTodo: Todo) => {
-    setTodos(prevTodos => 
-      prevTodos.map(todo => 
-        todo._id === updatedTodo._id ? updatedTodo : todo
-      )
-    )
-  }
-  
-  const handleDeleteTodo = (id: string) => {
-    setTodos(prevTodos => prevTodos.filter(todo => todo._id !== id))
+  const handleDeleteTodo = async (id: string) => {
+    // Todo sildikten sonra güncel listeyi tekrar çek
+    await fetchTodos();
   }
   
   const handleLogout = () => {
-    logoutUser()
-    router.push('/login')
+    logoutUser();
+    router.push('/login');
   }
+  
+  // Filtre değişiklikleri için tek bir fonksiyon
+  const applyFilters = (tabValue?: string, priorityValue?: Priority | null, pageValue?: number) => {
+    // Mevcut değerleri kullan veya parametreyle geçilenleri kullan
+    const newTab = tabValue !== undefined ? tabValue : activeTab;
+    const newPriority = priorityValue !== undefined ? priorityValue : selectedPriority;
+    const newPage = pageValue !== undefined ? pageValue : currentPage;
+    
+    // State güncellemelerini batch olarak yap
+    setActiveTab(newTab);
+    setSelectedPriority(newPriority);
+    setCurrentPage(newPage);
+    
+    // Manuel olarak verileri getir (useEffect'i beklemek yerine)
+    const status = newTab !== 'all' ? newTab as 'active' | 'completed' : undefined;
+    
+    setLoading(true);
+    getTodos({ 
+      status, 
+      priority: newPriority, 
+      page: newPage, 
+      limit: 3 
+    }).then(response => {
+      setTodos(response.todos);
+      setTotalPages(response.pagination.pages);
+      setTotalTodos(response.pagination.total);
+      setTotalAll(response.counts.all);
+      setTotalActive(response.counts.active);
+      setTotalCompleted(response.counts.completed);
+      setLoading(false);
+    }).catch(error => {
+      console.error('Error fetching todos:', error);
+      setError('Failed to load todos. Please try again.');
+      setLoading(false);
+    });
+  };
   
   // Handle tab change
   const handleTabChange = (value: string | null) => {
     if (value) {
-      setActiveTab(value);
+      applyFilters(value, null, 1); // Tab değiştiğinde priority'yi null yap ve sayfa 1'e dön
     }
   };
   
-  const filteredTodos = todos.filter(todo => {
-    if (activeTab === "completed" && !todo.completed) return false
-    if (activeTab === "active" && todo.completed) return false
-    if (selectedPriority && todo.priority !== selectedPriority) return false
-    return true
-  })
+  // Handle page change
+  const handlePageChange = (newPage: number) => {
+    applyFilters(undefined, undefined, newPage); // Sadece sayfa değiştir
+  };
   
-  const completedCount = todos.filter(todo => todo.completed).length
-  const activeCount = todos.length - completedCount
+  // Önce sayfayı resetle sonra filtreyi değiştir
+  const handlePriorityChange = (priority: Priority | null) => {
+    applyFilters(undefined, priority, 1); // Öncelik değiştiğinde sayfa 1'e dön
+  };
   
-  if (loading) {
+  // Tamamlanan ve aktif todo sayılarını hesapla (genel toplam için)
+  // Not: Bu değerler backend'den gelen toplam sayıları göstermek için ideal olarak API'den alınmalı
+  const completedCount = todos.filter(todo => todo.completed).length;
+  const activeCount = todos.length - completedCount;
+  
+  if (loading && todos.length === 0) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-gray-50">
         <Loader size="xl" color="blue" />
       </div>
-    )
+    );
   }
   
   return (
@@ -171,7 +244,7 @@ export default function TodosPage() {
           </Alert>
         )}
         
-        <Transition mounted={todos.length > 0} transition="fade" duration={400}>
+        <Transition mounted={true} transition="fade" duration={400}>
           {(styles) => (
             <Box style={styles}>
               <Paper withBorder p="md" mb="md" radius="md">
@@ -191,7 +264,7 @@ export default function TodosPage() {
                             radius="sm"
                             className="ml-1"
                           >
-                            {todos.length}
+                            {totalAll}
                           </Badge>
                         }
                       >
@@ -207,7 +280,7 @@ export default function TodosPage() {
                             radius="sm"
                             className="ml-1"
                           >
-                            {activeCount}
+                            {totalActive}
                           </Badge>
                         }
                       >
@@ -223,7 +296,7 @@ export default function TodosPage() {
                             radius="sm"
                             className="ml-1"
                           >
-                            {completedCount}
+                            {totalCompleted}
                           </Badge>
                         }
                       >
@@ -239,7 +312,7 @@ export default function TodosPage() {
                         size="md" 
                         color={selectedPriority === Priority.LOW ? "teal" : "gray"} 
                         variant={selectedPriority === Priority.LOW ? "filled" : "subtle"}
-                        onClick={() => setSelectedPriority(selectedPriority === Priority.LOW ? null : Priority.LOW)}
+                        onClick={() => handlePriorityChange(selectedPriority === Priority.LOW ? null : Priority.LOW)}
                         radius="xl"
                         title="Low Priority"
                       >
@@ -249,7 +322,7 @@ export default function TodosPage() {
                         size="md" 
                         color={selectedPriority === Priority.MEDIUM ? "blue" : "gray"} 
                         variant={selectedPriority === Priority.MEDIUM ? "filled" : "subtle"}
-                        onClick={() => setSelectedPriority(selectedPriority === Priority.MEDIUM ? null : Priority.MEDIUM)}
+                        onClick={() => handlePriorityChange(selectedPriority === Priority.MEDIUM ? null : Priority.MEDIUM)}
                         radius="xl"
                         title="Medium Priority"
                       >
@@ -259,7 +332,7 @@ export default function TodosPage() {
                         size="md" 
                         color={selectedPriority === Priority.HIGH ? "red" : "gray"} 
                         variant={selectedPriority === Priority.HIGH ? "filled" : "subtle"}
-                        onClick={() => setSelectedPriority(selectedPriority === Priority.HIGH ? null : Priority.HIGH)}
+                        onClick={() => handlePriorityChange(selectedPriority === Priority.HIGH ? null : Priority.HIGH)}
                         radius="xl"
                         title="High Priority"
                       >
@@ -270,7 +343,11 @@ export default function TodosPage() {
                 </Group>
                 
                 <div className="mt-2">
-                  {filteredTodos.length === 0 ? (
+                  {loading ? (
+                    <div className="flex justify-center py-8">
+                      <Loader size="md" />
+                    </div>
+                  ) : todos.length === 0 ? (
                     <Card className="border border-dashed bg-transparent">
                       <Text ta="center" color="dimmed" py={4}>
                         No {activeTab !== "all" ? activeTab : ""} tasks {selectedPriority ? `with ${selectedPriority} priority` : ""} found.
@@ -279,7 +356,21 @@ export default function TodosPage() {
                   ) : (
                     <div>
                       <Group justify="space-between" align="center" className="mb-4 text-xs text-gray-500">
-                        <span>Showing {filteredTodos.length} of {todos.length} tasks</span>
+                        <Group gap={8}>
+                          <span>
+                            Showing {todos.length} of {totalTodos} tasks 
+                            ({activeTab !== "all" ? activeTab : "all"} {selectedPriority ? `/ ${selectedPriority} priority` : ""})
+                          </span>
+                          <Badge 
+                            color="blue" 
+                            size="xs" 
+                            variant="outline"
+                            className="flex items-center gap-1"
+                          >
+                            <IconArrowDown size={10} /> Newest first
+                          </Badge>
+                        </Group>
+                        
                         {selectedPriority && (
                           <Badge 
                             color={selectedPriority === Priority.LOW ? "teal" : selectedPriority === Priority.MEDIUM ? "blue" : "red"} 
@@ -300,7 +391,7 @@ export default function TodosPage() {
                         )}
                       </Group>
                       
-                      {filteredTodos.map(todo => (
+                      {todos.map(todo => (
                         <TodoItem 
                           key={todo._id}
                           todo={todo}
@@ -308,6 +399,19 @@ export default function TodosPage() {
                           onDelete={handleDeleteTodo}
                         />
                       ))}
+                      
+                      {/* Sayfalama kontrolü */}
+                      {totalPages > 1 && (
+                        <div className="flex justify-center mt-6">
+                          <Pagination 
+                            total={totalPages} 
+                            value={currentPage}
+                            onChange={handlePageChange}
+                            withEdges
+                            size="sm"
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
@@ -316,7 +420,7 @@ export default function TodosPage() {
           )}
         </Transition>
           
-        {todos.length === 0 && (
+        {todos.length === 0 && !loading && (
           <Paper shadow="sm" p="xl" withBorder className="mt-8 text-center">
             <IconList size={48} className="text-gray-300 mx-auto mb-4" />
             <Title order={3} className="text-gray-700 mb-2">No todos yet</Title>

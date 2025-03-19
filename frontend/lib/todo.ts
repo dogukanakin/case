@@ -1,8 +1,30 @@
 import { API_URL } from './config';
-import { CreateTodoInput, Todo, UpdateTodoInput } from '@/types/todo';
+import { CreateTodoInput, Todo, UpdateTodoInput, Priority } from '@/types/todo';
 
-// Get all todos for the logged-in user
-export const getTodos = async (): Promise<Todo[]> => {
+interface TodoFilterParams {
+  status?: 'active' | 'completed' | 'all';
+  priority?: Priority | null;
+  page?: number;
+  limit?: number;
+}
+
+interface TodosResponse {
+  todos: Todo[];
+  pagination: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+  };
+  counts: {
+    all: number;
+    active: number;
+    completed: number;
+  };
+}
+
+// Get all todos for the logged-in user with filters and pagination
+export const getTodos = async ({ status, priority, page = 1, limit = 3 }: TodoFilterParams = {}): Promise<TodosResponse> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -10,7 +32,22 @@ export const getTodos = async (): Promise<Todo[]> => {
       throw new Error('Authentication token not found');
     }
 
-    const response = await fetch(`${API_URL}/todos`, {
+    // URL query parametrelerini oluştur
+    const params = new URLSearchParams();
+    if (status && status !== 'all') {
+      params.append('status', status);
+    }
+    if (priority) {
+      params.append('priority', priority);
+    }
+    
+    // Sayfalama parametrelerini ekle
+    params.append('page', page.toString());
+    params.append('limit', limit.toString());
+    
+    const queryString = params.toString() ? `?${params.toString()}` : '';
+
+    const response = await fetch(`${API_URL}/todos${queryString}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
