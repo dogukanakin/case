@@ -164,12 +164,21 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     const todoId = req.params.id;
     const { title, description, completed, priority, tags } = req.body;
 
+    console.log('Update request received:', {
+      userId,
+      todoId,
+      body: req.body,
+      headers: req.headers
+    });
+
     if (!userId) {
+      console.log('Authentication failed: userId is missing');
       res.status(401).json({ message: 'User not authenticated' });
       return;
     }
 
     if (!mongoose.Types.ObjectId.isValid(todoId)) {
+      console.log('Invalid todoId format:', todoId);
       res.status(400).json({ message: 'Invalid todo ID' });
       return;
     }
@@ -178,6 +187,11 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     const existingTodo = await Todo.findOne({ _id: todoId, user: userId });
     
     if (!existingTodo) {
+      console.log('Todo not found or does not belong to user:', {
+        todoId,
+        userId,
+        exists: existingTodo !== null
+      });
       res.status(404).json({ message: 'Todo not found' });
       return;
     }
@@ -192,16 +206,23 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       // We're not updating recommendation here as it should be handled by the ChatGPT integration
     };
 
+    console.log('Updating todo with data:', updateData);
+
     const updatedTodo = await Todo.findByIdAndUpdate(
       todoId,
       updateData,
       { new: true }
     );
 
+    console.log('Todo updated successfully:', updatedTodo);
     res.status(200).json(updatedTodo);
   } catch (error) {
     console.error('Error updating todo:', error);
-    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: (error as Error).message,
+      stack: process.env.NODE_ENV === 'development' ? (error as Error).stack : undefined 
+    });
   }
 };
 

@@ -1,14 +1,13 @@
 import express from 'express';
 import { 
   getTodos, 
-  getTodoById, 
-  createTodo, 
-  updateTodo, 
+  getTodoById,  
+  createTodo,
+  updateTodo,
   deleteTodo 
 } from '../controllers/todo.controller';
 import { protect } from '../middleware/auth.middleware';
-import { validate } from '../middleware/validation.middleware';
-import { createTodoSchema, updateTodoSchema } from '../validation/todo.validation';
+
 
 const router = express.Router();
 
@@ -21,11 +20,11 @@ router.get('/', getTodos);
 // GET a single todo by ID
 router.get('/:id', getTodoById);
 
-// POST create a new todo
-router.post('/', validate(createTodoSchema), createTodo);
+// CREATE a new todo
+router.post('/', createTodo);
 
-// PUT update a todo
-router.put('/:id', validate(updateTodoSchema), updateTodo);
+// UPDATE a todo
+router.put('/:id', updateTodo);
 
 // DELETE a todo
 router.delete('/:id', deleteTodo);

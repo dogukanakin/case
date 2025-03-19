@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  # Backend service
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - NODE_ENV=development
+    ports:
+      - "5001:5000"
+    environment:
+      - NODE_ENV=development
+      - PORT=5000
+      - MONGODB_URI=mongodb+srv://dogukannakin:KQg7XLdzN19mpKWo@cluster0.2remq.mongodb.net/?retryWrites=true&w=majority
+      - JWT_SECRET=your_jwt_secret_key
+      - JWT_EXPIRES_IN=7d
+    depends_on:
+      - mongodb
+    volumes:
+      - ./src:/usr/src/app/src
+      - ./package.json:/usr/src/app/package.json
+      - ./tsconfig.json:/usr/src/app/tsconfig.json
+      - /usr/src/app/node_modules
+      - /usr/src/app/dist
+    networks:
+      - app-network
+    command: sh -c "npm run build && npm start"
+
+  # MongoDB service
+  mongodb:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - app-network
+
+volumes:
+  mongodb_data:
+
+networks:
+  app-network:
+    driver: bridge 

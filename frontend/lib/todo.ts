@@ -109,21 +109,39 @@ export const createTodo = async (todoData: CreateTodoInput): Promise<Todo> => {
       throw new Error('Authentication token not found');
     }
 
+    // Make sure the priority value is lowercase if it exists
+    const formattedData = { ...todoData };
+    if (formattedData.priority) {
+      formattedData.priority = formattedData.priority.toLowerCase() as Priority;
+    }
+
+    console.log('Creating todo with data:', formattedData);
+
     const response = await fetch(`${API_URL}/todos`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(todoData),
+      body: JSON.stringify(formattedData),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to create todo');
+    if (response.status === 401) {
+      // Handle token expiration - redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Authentication token expired or invalid');
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('Create todo response:', responseData);
+
+    if (!response.ok) {
+      console.error('Error creating todo:', responseData);
+      throw new Error(responseData.message || responseData.error || 'Failed to create todo');
+    }
+
+    return responseData;
   } catch (error) {
     console.error('Error creating todo:', error);
     throw error;
@@ -139,21 +157,39 @@ export const updateTodo = async (id: string, todoData: UpdateTodoInput): Promise
       throw new Error('Authentication token not found');
     }
 
+    // Make sure the priority value is lowercase if it exists
+    const formattedData = { ...todoData };
+    if (formattedData.priority) {
+      formattedData.priority = formattedData.priority.toLowerCase() as Priority;
+    }
+
+    console.log('Updating todo:', id, 'with data:', formattedData);
+
     const response = await fetch(`${API_URL}/todos/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
       },
-      body: JSON.stringify(todoData),
+      body: JSON.stringify(formattedData),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update todo');
+    if (response.status === 401) {
+      // Handle token expiration - redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Authentication token expired or invalid');
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('Update todo response:', responseData);
+
+    if (!response.ok) {
+      console.error('Error updating todo:', responseData);
+      throw new Error(responseData.message || responseData.error || 'Failed to update todo');
+    }
+
+    return responseData;
   } catch (error) {
     console.error('Error updating todo:', error);
     throw error;

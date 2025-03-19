@@ -1,11 +1,12 @@
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User, { IUser } from '../models/user.model';
 
 // Generate JWT Token
 const generateToken = (id: string): string => {
   return jwt.sign({ id }, process.env.JWT_SECRET as string, {
-    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+    expiresIn: Number(process.env.JWT_EXPIRES_IN) || '7d',
   });
 };
 
@@ -40,7 +41,7 @@ export const registerUser = async (req: Request, res: Response) => {
         _id: user._id,
         username: user.username,
         email: user.email,
-        token: generateToken(user._id),
+        token: generateToken((user._id as mongoose.Types.ObjectId).toString()),
       });
     } else {
       res.status(400).json({ error: 'Invalid user data' });
@@ -75,7 +76,7 @@ export const loginUser = async (req: Request, res: Response) => {
       _id: user._id,
       username: user.username,
       email: user.email,
-      token: generateToken(user._id),
+      token: generateToken((user._id as mongoose.Types.ObjectId).toString()),
     });
   } catch (error) {
     console.error('Error in loginUser:', error);
