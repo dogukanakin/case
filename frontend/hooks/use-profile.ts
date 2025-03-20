@@ -22,7 +22,6 @@ export function useProfile(): UseProfileReturn {
     const isAuth = isAuthenticated();
     
     if (!isAuth) {
-      console.log('Not authenticated, redirecting to login...');
       router.push('/login');
       return false;
     }

@@ -156,7 +156,6 @@ export const createTodo = async (
     if (imageFile) formData.append('image', imageFile);
     if (attachmentFile) formData.append('file', attachmentFile);
 
-    console.log('Creating todo with data:', formattedData);
 
     const response = await fetch(`${API_URL}/todos`, {
       method: 'POST',
@@ -175,7 +174,6 @@ export const createTodo = async (
     }
 
     const responseData = await response.json();
-    console.log('Create todo response:', responseData);
 
     if (!response.ok) {
       console.error('Error creating todo:', responseData);
@@ -236,7 +234,6 @@ export const updateTodo = async (
     if (imageFile) formData.append('image', imageFile);
     if (attachmentFile) formData.append('file', attachmentFile);
 
-    console.log('Updating todo:', id, 'with data:', formattedData);
 
     const response = await fetch(`${API_URL}/todos/${id}`, {
       method: 'PUT',
@@ -255,7 +252,6 @@ export const updateTodo = async (
     }
 
     const responseData = await response.json();
-    console.log('Update todo response:', responseData);
 
     if (!response.ok) {
       console.error('Error updating todo:', responseData);

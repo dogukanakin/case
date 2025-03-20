@@ -121,10 +121,6 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
     const userId = req.user?._id;
     const { title, description, priority, tags } = req.body;
 
-    // Log the incoming request for debugging
-    console.log('Create Todo Request Body:', req.body);
-    console.log('Create Todo Request Files:', req.files);
-
     if (!userId) {
       res.status(401).json({ message: 'User not authenticated' });
       return;
@@ -152,22 +148,15 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
     // ChatGPT'den öneriler al
     let recommendation = '';
     try {
-      console.log('Generating recommendation from ChatGPT...');
       recommendation = await generateTodoRecommendation(
         title, 
         description || '',
         priority || Priority.MEDIUM,
         Array.isArray(tags) ? tags : []
       );
-      console.log('Generated recommendation:', recommendation);
     } catch (recError) {
       console.error('Failed to generate recommendation:', recError);
       recommendation = 'AI recommendations temporarily unavailable. We\'ll try again later.';
-    }
-
-    // If the recommendation indicates an API key issue, provide helpful guidance
-    if (recommendation.includes('No AI recommendations available')) {
-      console.log('OpenAI API key missing or invalid');
     }
 
     // Create the todo with safe defaults
@@ -184,7 +173,6 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       user: userId,
     };
     
-    console.log('Creating todo with data:', todoData);
     
     const newTodo = await Todo.create(todoData);
     res.status(201).json(newTodo);
@@ -211,22 +199,13 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     const todoId = req.params.id;
     const { title, description, completed, priority, tags, removeImage, removeFile } = req.body;
 
-    console.log('Update request received:', {
-      userId,
-      todoId,
-      body: req.body,
-      files: req.files,
-      headers: req.headers
-    });
 
     if (!userId) {
-      console.log('Authentication failed: userId is missing');
       res.status(401).json({ message: 'User not authenticated' });
       return;
     }
 
     if (!mongoose.Types.ObjectId.isValid(todoId)) {
-      console.log('Invalid todoId format:', todoId);
       res.status(400).json({ message: 'Invalid todo ID' });
       return;
     }
@@ -235,11 +214,6 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     const existingTodo = await Todo.findOne({ _id: todoId, user: userId });
     
     if (!existingTodo) {
-      console.log('Todo not found or does not belong to user:', {
-        todoId,
-        userId,
-        exists: existingTodo !== null
-      });
       res.status(404).json({ message: 'Todo not found' });
       return;
     }
@@ -311,12 +285,10 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
     // Eğer sadece completed durumu değişiyorsa, log ekle
     if (completed !== undefined && completed !== existingTodo.completed && 
         !contentChanged) {
-      console.log('Only completion status changed, skipping recommendation update');
     }
       
     if (contentChanged) {
       try {
-        console.log('Content changed, regenerating recommendation...');
         const newTitle = title !== undefined ? title : existingTodo.title;
         const newDescription = description !== undefined ? description : existingTodo.description;
         const newPriority = priority !== undefined ? priority : existingTodo.priority;
@@ -328,17 +300,12 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
           newPriority,
           newTags
         );
-        console.log('New recommendation generated:', recommendation);
       } catch (recError) {
         console.error('Failed to update recommendation:', recError);
         // Keep existing recommendation but add note about error
         recommendation = existingTodo.recommendation || 'AI recommendations temporarily unavailable. We\'ll try again later.';
       }
       
-      // If the recommendation indicates an API key issue, provide helpful guidance
-      if (recommendation.includes('No AI recommendations available')) {
-        console.log('OpenAI API key missing or invalid');
-      }
     }
 
     // Prepare update data with safe handling of arrays
@@ -354,7 +321,6 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       recommendation, // Update recommendation when content changes
     };
 
-    console.log('Updating todo with data:', updateData);
 
     const updatedTodo = await Todo.findByIdAndUpdate(
       todoId,
@@ -362,7 +328,6 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       { new: true }
     );
 
-    console.log('Todo updated successfully:', updatedTodo);
     res.status(200).json(updatedTodo);
   } catch (error) {
     console.error('Error updating todo:', error);

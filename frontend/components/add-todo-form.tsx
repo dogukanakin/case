@@ -66,15 +66,6 @@ export default function AddTodoForm({ onAddTodo }: AddTodoFormProps) {
       setIsSubmitting(true);
       setError(null);
       
-      console.log('Submitting todo with data:', {
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        tags: tags || [],
-        imageFile,
-        pdfFile
-      });
-      
       const newTodo = await createTodo(
         {
           title: title.trim(),

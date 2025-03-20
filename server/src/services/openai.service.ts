@@ -37,7 +37,6 @@ async function detectLanguage(text: string): Promise<string> {
     });
     
     const languageCode = completion.choices[0]?.message?.content?.trim().toLowerCase() || 'en';
-    console.log(`Detected language: ${languageCode}`);
     return languageCode;
   } catch (error) {
     console.error('Error detecting language:', error);
@@ -66,8 +65,6 @@ export const generateTodoRecommendation = async (
       return 'No AI recommendations available. Please add an OpenAI API key to enable this feature.';
     }
 
-    console.log(`Generating recommendation for todo: "${title}"`);
-    
     // Kullanıcının dilini tespit et (başlık ve açıklama içeriğinden)
     const userContent = `${title} ${description}`;
     const languageCode = await detectLanguage(userContent);
@@ -90,8 +87,6 @@ export const generateTodoRecommendation = async (
       promptLanguage = "German";
     }
     
-    console.log(`Using ${languageName} for recommendations`);
-
     // Todo'nun içeriğinden bir prompt oluştur
     const prompt = `
     I have a todo task with the following details:
@@ -108,8 +103,6 @@ export const generateTodoRecommendation = async (
     Keep your response short and actionable. Respond in ${promptLanguage} language only.
     `;
 
-    console.log('Attempting to call OpenAI API with gpt-4o-mini model');
-    
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [
@@ -123,7 +116,6 @@ export const generateTodoRecommendation = async (
       temperature: 0.7,
     });
       
-    console.log('OpenAI API call successful with gpt-4o-mini');
     return completion.choices[0]?.message?.content?.trim() || 'No recommendation available.';
     
   } catch (error) {

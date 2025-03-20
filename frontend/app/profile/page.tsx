@@ -25,8 +25,8 @@ export default function ProfilePage() {
   
   // Handle user data update (from password change form)
   const handleUserDataUpdate = (updatedData: any) => {
-    // Note: In a real-world scenario, you might want to update the userData state
-    console.log('User data updated:', updatedData)
+    // Update the userData state with the new user data
+    router.refresh(); // Refresh the page to get the latest user data
   }
   
   // Show loading state
