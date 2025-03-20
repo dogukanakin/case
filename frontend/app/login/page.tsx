@@ -57,7 +57,7 @@ export default function LoginPage() {
   
   return (
     <div className="flex min-h-screen items-center justify-center">
-      <Container size="xs">
+      <Container size="xs" style={{ width: '400px', maxWidth: '90vw' }}>
         <Paper shadow="md" p="lg" radius="md" withBorder>
           <Stack gap="md">
             <Group justify="center" mb="md">
@@ -72,7 +72,7 @@ export default function LoginPage() {
             </Text>
             
             {error && (
-              <Alert color="red" title="Login failed">
+              <Alert color="red" title="Login failed" mb="xs">
                 {error}
               </Alert>
             )}
