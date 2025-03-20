@@ -3,6 +3,7 @@ import Todo, { Priority } from '../models/todo.model';
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
+import { generateTodoRecommendation } from '../services/openai.service';
 
 // Get all todos for the logged-in user
 export const getTodos = async (req: Request, res: Response): Promise<void> => {
@@ -148,6 +149,27 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       }
     }
 
+    // ChatGPT'den öneriler al
+    let recommendation = '';
+    try {
+      console.log('Generating recommendation from ChatGPT...');
+      recommendation = await generateTodoRecommendation(
+        title, 
+        description || '',
+        priority || Priority.MEDIUM,
+        Array.isArray(tags) ? tags : []
+      );
+      console.log('Generated recommendation:', recommendation);
+    } catch (recError) {
+      console.error('Failed to generate recommendation:', recError);
+      recommendation = 'AI recommendations temporarily unavailable. We\'ll try again later.';
+    }
+
+    // If the recommendation indicates an API key issue, provide helpful guidance
+    if (recommendation.includes('No AI recommendations available')) {
+      console.log('OpenAI API key missing or invalid');
+    }
+
     // Create the todo with safe defaults
     const todoData = {
       title,
@@ -155,7 +177,7 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       completed: false,
       priority: priority || Priority.MEDIUM,
       tags: Array.isArray(tags) ? tags : [],
-      recommendation: '', // Empty for now, will be filled by ChatGPT later
+      recommendation, // ChatGPT'den gelen öneri
       imageUrl,
       fileUrl,
       fileName,
@@ -274,6 +296,50 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
         fileName = files.file[0].originalname;
       }
     }
+    
+    // İçerik değiştiğinde ChatGPT'den yeni öneriler al
+    let recommendation = existingTodo.recommendation || '';
+    
+    // Sadece içerik (title, description, priority, tags) değişikliklerinde öneri güncelle, 
+    // completed değişiminde öneri güncelleme!
+    const contentChanged = 
+      (title !== undefined && title !== existingTodo.title) || 
+      (description !== undefined && description !== existingTodo.description) || 
+      (priority !== undefined && priority !== existingTodo.priority) ||
+      (tags !== undefined && JSON.stringify(tags) !== JSON.stringify(existingTodo.tags));
+    
+    // Eğer sadece completed durumu değişiyorsa, log ekle
+    if (completed !== undefined && completed !== existingTodo.completed && 
+        !contentChanged) {
+      console.log('Only completion status changed, skipping recommendation update');
+    }
+      
+    if (contentChanged) {
+      try {
+        console.log('Content changed, regenerating recommendation...');
+        const newTitle = title !== undefined ? title : existingTodo.title;
+        const newDescription = description !== undefined ? description : existingTodo.description;
+        const newPriority = priority !== undefined ? priority : existingTodo.priority;
+        const newTags = tags !== undefined ? (Array.isArray(tags) ? tags : []) : existingTodo.tags;
+        
+        recommendation = await generateTodoRecommendation(
+          newTitle,
+          newDescription,
+          newPriority,
+          newTags
+        );
+        console.log('New recommendation generated:', recommendation);
+      } catch (recError) {
+        console.error('Failed to update recommendation:', recError);
+        // Keep existing recommendation but add note about error
+        recommendation = existingTodo.recommendation || 'AI recommendations temporarily unavailable. We\'ll try again later.';
+      }
+      
+      // If the recommendation indicates an API key issue, provide helpful guidance
+      if (recommendation.includes('No AI recommendations available')) {
+        console.log('OpenAI API key missing or invalid');
+      }
+    }
 
     // Prepare update data with safe handling of arrays
     const updateData = {
@@ -285,7 +351,7 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       imageUrl,
       fileUrl,
       fileName,
-      // We're not updating recommendation here as it should be handled by the ChatGPT integration
+      recommendation, // Update recommendation when content changes
     };
 
     console.log('Updating todo with data:', updateData);

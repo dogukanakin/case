@@ -4,8 +4,8 @@ import { useState } from 'react';
 import { Todo, UpdateTodoInput, Priority } from '@/types/todo';
 import { updateTodo, deleteTodo } from '@/lib/todo';
 import { UPLOADS_URL } from '@/lib/config';
-import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper, Image, Anchor, Text } from '@mantine/core';
-import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag, IconDownload, IconPhoto, IconFile } from '@tabler/icons-react';
+import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper, Image, Anchor, Text, ThemeIcon, Card, Tooltip } from '@mantine/core';
+import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag, IconDownload, IconPhoto, IconFile, IconBulb, IconInfoCircle } from '@tabler/icons-react';
 
 interface TodoItemProps {
   todo: Todo;
@@ -314,6 +314,27 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
             </Box>
           )}
           
+          {/* AI Recommendation (read-only in edit mode) */}
+          {todo.recommendation && (
+            <Card withBorder p="xs" radius="md" className="mt-3 bg-blue-50">
+              <Group gap={5} mb={5}>
+                <ThemeIcon color="blue" size="sm" variant="light" radius="xl">
+                  <IconBulb size={14} />
+                </ThemeIcon>
+                <Text size="xs" fw={500} color="blue">AI Recommendation</Text>
+                <Text size="xs" color="dimmed">(will be updated when you save changes)</Text>
+              </Group>
+              <Text size="sm" color={todo.recommendation.includes('unavailable') || todo.recommendation.includes('Sorry') ? 'dimmed' : 'inherit'} className="ml-6">
+                {todo.recommendation}
+              </Text>
+              {todo.recommendation.includes('API key') && (
+                <Text size="xs" color="red" mt={4} className="ml-6">
+                  To enable AI recommendations, ask your administrator to add a valid OpenAI API key.
+                </Text>
+              )}
+            </Card>
+          )}
+          
           <Group justify="flex-end" className="mt-4 gap-2">
             <Button
               onClick={handleCancelEdit}
@@ -400,6 +421,31 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
                   </Button>
                 )}
                 
+                {/* Display AI recommendation if exists */}
+                {todo.recommendation && (
+                  <Card withBorder p="xs" radius="md" className="mt-3 bg-blue-50">
+                    <Group gap={5} mb={5}>
+                      <ThemeIcon color="blue" size="sm" variant="light" radius="xl">
+                        <IconBulb size={14} />
+                      </ThemeIcon>
+                      <Text size="xs" fw={500} color="blue">AI Recommendation</Text>
+                      <Tooltip label="AI-generated recommendation based on your task details">
+                        <ActionIcon size="xs" variant="transparent" color="gray">
+                          <IconInfoCircle size={14} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                    <Text size="sm" color={todo.recommendation.includes('unavailable') || todo.recommendation.includes('Sorry') ? 'dimmed' : 'inherit'} className="ml-6">
+                      {todo.recommendation}
+                    </Text>
+                    {todo.recommendation.includes('API key') && (
+                      <Text size="xs" color="red" mt={4} className="ml-6">
+                        To enable AI recommendations, ask your administrator to add a valid OpenAI API key.
+                      </Text>
+                    )}
+                  </Card>
+                )}
+                
                 {todo.tags.length > 0 && (
                   <Group className="mt-3 gap-1">
                     <IconTag size={14} className="text-blue-500" />
@@ -409,13 +455,6 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
                       ))}
                     </Group>
                   </Group>
-                )}
-                
-                {todo.recommendation && (
-                  <Paper className="mt-3 p-3 bg-blue-50 border border-blue-100 rounded-md">
-                    <p className="text-xs font-medium text-blue-800 mb-1">AI Recommendation:</p>
-                    <p className="text-sm text-blue-700">{todo.recommendation}</p>
-                  </Paper>
                 )}
                 
                 <Group className="mt-3 text-xs text-gray-400 items-center gap-1">
