@@ -1,17 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, getCurrentUser } from '@/lib/auth';
-
-interface UserData {
-  username?: string;
-  email?: string;
-}
-
-interface UseProfileReturn {
-  loading: boolean;
-  userData: UserData | null;
-  checkAuth: () => Promise<boolean>;
-}
+import { UserData, UseProfileReturn } from '@/types/auth';
 
 export function useProfile(): UseProfileReturn {
   const [loading, setLoading] = useState(true);

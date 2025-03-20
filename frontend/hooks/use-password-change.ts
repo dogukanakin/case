@@ -1,21 +1,9 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { PasswordChangeCredentials } from '@/types/auth';
+import { PasswordChangeCredentials, UsePasswordChangeReturn } from '@/types/auth';
 import { notifications } from '@mantine/notifications';
 import { useAuth } from '@/components/auth/auth-provider';
 import { getCurrentUser } from '@/lib/auth';
-
-interface UsePasswordChangeReturn {
-  error: string | null;
-  success: string | null;
-  isSubmitting: boolean;
-  register: ReturnType<typeof useForm<PasswordChangeCredentials & { newPasswordConfirm: string }>>['register'];
-  handleSubmit: ReturnType<typeof useForm<PasswordChangeCredentials & { newPasswordConfirm: string }>>['handleSubmit'];
-  errors: ReturnType<typeof useForm<PasswordChangeCredentials & { newPasswordConfirm: string }>>['formState']['errors'];
-  watch: ReturnType<typeof useForm<PasswordChangeCredentials & { newPasswordConfirm: string }>>['watch'];
-  onSubmit: (data: PasswordChangeCredentials & { newPasswordConfirm: string }) => Promise<void>;
-  resetForm: () => void;
-}
 
 export function usePasswordChange(
   onUserDataUpdate?: (userData: any) => void

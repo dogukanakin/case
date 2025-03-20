@@ -14,19 +14,9 @@ import {
   User, 
   LoginCredentials, 
   RegisterCredentials, 
-  PasswordChangeCredentials 
+  PasswordChangeCredentials,
+  AuthContextType
 } from '@/types/auth'
-
-interface AuthContextType {
-  user: User | null;
-  loading: boolean;
-  error: string | null;
-  login: (credentials: LoginCredentials) => Promise<void>;
-  register: (credentials: RegisterCredentials) => Promise<void>;
-  logout: () => void;
-  changeUserPassword: (credentials: PasswordChangeCredentials) => Promise<{ message: string; user: User }>;
-  isAuth: boolean;
-}
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 

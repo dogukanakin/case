@@ -1,11 +1,7 @@
 'use client';
 
 import { Card, Title, Text } from '@mantine/core';
-
-interface AccountInfoProps {
-  username?: string;
-  email?: string;
-}
+import { AccountInfoProps } from '@/types/auth';
 
 export default function AccountInfo({ username, email }: AccountInfoProps) {
   return (

@@ -1,11 +1,7 @@
 'use client';
 
 import { Button, Title, Text } from '@mantine/core';
-
-interface ProfileHeaderProps {
-  username: string;
-  onLogout: () => void;
-}
+import { ProfileHeaderProps } from '@/types/auth';
 
 export default function ProfileHeader({ username, onLogout }: ProfileHeaderProps) {
   return (

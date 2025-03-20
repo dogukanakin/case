@@ -1,14 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { isAuthenticated, getCurrentUser, logoutUser } from '@/lib/auth';
-
-interface UseAuthReturn {
-  username: string;
-  loading: boolean;
-  error: string | null;
-  logout: () => void;
-  checkAuth: () => Promise<boolean>;
-}
+import { UseAuthReturn } from '@/types/auth';
 
 export function useAuth(): UseAuthReturn {
   const [username, setUsername] = useState('');

@@ -3,10 +3,7 @@
 import { Button, Card, Title, Alert, PasswordInput } from '@mantine/core';
 import { IconCheck } from '@tabler/icons-react';
 import { usePasswordChange } from '@/hooks/use-password-change';
-
-interface PasswordChangeFormProps {
-  onUserDataUpdate: (userData: any) => void;
-}
+import { PasswordChangeFormProps } from '@/types/auth';
 
 export default function PasswordChangeForm({ onUserDataUpdate }: PasswordChangeFormProps) {
   const {
@@ -75,7 +72,7 @@ export default function PasswordChangeForm({ onUserDataUpdate }: PasswordChangeF
               value: 6,
               message: 'Şifre en az 6 karakter olmalıdır'
             },
-            validate: (value) => {
+            validate: (value: string) => {
               return watch('newPassword') === value || 'Şifreler eşleşmiyor'
             }
           })}
