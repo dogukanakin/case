@@ -9,16 +9,30 @@ This guide explains how to set up and run the To-Do application using Docker.
 
 ## Docker Setup
 
-Run the entire application with a single command:
+### Production Setup
+
+Run the entire application in production mode:
 
 ```bash
-docker-compose up -d
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 This command will start:
 - Backend service at http://localhost:5001
 - Frontend service at http://localhost:3000
 - MongoDB service (for local development)
+
+### Development Setup with Hot Reload
+
+For development with hot reload (changes are reflected immediately):
+
+```bash
+docker-compose up -d
+```
+
+This setup mounts the local frontend directory to the container, allowing code changes to be automatically detected and reloaded in the browser.
+
+### Stopping the Application
 
 To stop the application:
 

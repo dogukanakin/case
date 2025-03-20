@@ -34,30 +34,25 @@ services:
       - app-network
     restart: unless-stopped
 
-  # Frontend service - Development mode with hot reload
+  # Frontend service - Production mode
   frontend:
     build:
       context: ./frontend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-      - /app/.next
     depends_on:
       - backend
     networks:
       - app-network
     restart: unless-stopped
-    command: npm run dev
 
 volumes:
   mongodb_data:
 
 networks:
   app-network:
-    driver: bridge
+    driver: bridge 
