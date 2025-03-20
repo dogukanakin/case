@@ -7,7 +7,6 @@ import { generateTodoRecommendation } from '../services/openai.service';
 import { 
   ITodo, 
   Priority, 
-  IAuthenticatedRequest, 
   ITodoFilterParams,
   ITodoPaginationResponse,
 } from '../interfaces/todo.interfaces';

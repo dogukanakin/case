@@ -11,6 +11,11 @@ export interface IUser {
   comparePassword(candidatePassword: string): Promise<boolean>;
 }
 
+// JWT payload interface
+export interface IJwtPayload {
+  id: string;
+}
+
 // User registration request
 export interface IUserRegisterRequest {
   username: string;
@@ -41,4 +46,13 @@ export interface IUserResponse {
 // Auth request with user (after auth middleware)
 export interface IAuthRequest extends Request {
   user?: IUser;
+}
+
+// Extend Express Request interface to include user
+declare global {
+  namespace Express {
+    interface Request {
+      user?: IUser;
+    }
+  }
 } 

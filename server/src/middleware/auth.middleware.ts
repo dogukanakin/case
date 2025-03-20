@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import User from '../models/user.model';
-import { IUser } from '../interfaces/user.interfaces';
+import { IUser, IJwtPayload } from '../interfaces/user.interfaces';
 
 // Extend Express Request interface to include user
 declare global {
@@ -10,10 +10,6 @@ declare global {
       user?: IUser;
     }
   }
-}
-
-interface JwtPayload {
-  id: string;
 }
 
 export const protect = async (
@@ -36,7 +32,7 @@ export const protect = async (
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET as string
-      ) as JwtPayload;
+      ) as IJwtPayload;
 
       // Find user by id and attach to request (without password)
       const user = await User.findById(decoded.id).select('-password');
