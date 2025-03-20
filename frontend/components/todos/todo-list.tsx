@@ -1,8 +1,8 @@
 'use client';
 
 import { Alert, Badge, Card, Group, Loader, Paper, Text, Title, ActionIcon } from '@mantine/core';
-import { IconList, IconX } from '@tabler/icons-react';
-import { Todo, Priority, TodoListProps } from '@/types/todo';
+import { IconX } from '@tabler/icons-react';
+import { Priority, TodoListProps } from '@/types/todo';
 import TodoItem from '@/components/todo-item/todo-item';
 
 export default function TodoList({ 

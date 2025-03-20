@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Badge, ActionIcon, TextInput, Button, Group, Box, Text } from '@mantine/core';
-import { IconX } from '@tabler/icons-react';
+import { Badge, ActionIcon, TextInput, Button, Group, Box, Text, Flex, Stack } from '@mantine/core';
+import { IconX, IconPlus } from '@tabler/icons-react';
 
 interface TodoTagsProps {
   tags: string[];
@@ -33,69 +33,101 @@ export default function TodoTags({ tags, onTagsChange, readOnly = false, disable
     if (tags.length === 0) return null;
     
     return (
-      <Group className="mt-3 gap-1">
-        <Group className="flex-wrap gap-1">
-          {tags.map(tag => (
-            <Badge key={tag} color="blue" size="xs" variant="light" radius="sm">{tag}</Badge>
-          ))}
-        </Group>
-      </Group>
+      <Flex wrap="wrap" gap={6}>
+        {tags.map(tag => (
+          <Badge 
+            key={tag} 
+            color="blue" 
+            size="sm" 
+            variant="light" 
+            radius="sm"
+          >
+            {tag}
+          </Badge>
+        ))}
+      </Flex>
     );
   }
 
   // Editable mode for managing tags
   return (
-    <Box className="space-y-2">
-      <Box className="text-sm font-medium">Tags (max 5)</Box>
-      <Text size="xs" className="text-gray-500 -mt-1 mb-1">
-        {tags.length}/5
-      </Text>
+    <Stack gap="xs">
+      <Flex justify="space-between" align="center">
+        <Text size="sm" fw={500} color="dimmed">
+          Tags (max 5)
+        </Text>
+        <Text size="xs" color="dimmed">
+          {tags.length}/5
+        </Text>
+      </Flex>
       
-      <div className="flex flex-wrap gap-1 mb-2">
-        {tags.map((tag) => (
-          <Badge
-            key={tag}
-            size="lg"
-            variant="filled"
-            color="blue"
-            rightSection={
-              <ActionIcon
-                size="xs"
-                color="blue"
-                onClick={() => handleRemoveTag(tag)}
-                radius="xl"
-                variant="transparent"
-                disabled={disabled}
-              >
-                <IconX size={10} />
-              </ActionIcon>
-            }
-          >
-            {tag}
-          </Badge>
-        ))}
-      </div>
+      {/* Display existing tags */}
+      <Box>
+        {tags.length > 0 ? (
+          <Flex wrap="wrap" gap={8} mb={10}>
+            {tags.map((tag) => (
+              <Flex key={tag} align="center" gap={2}>
+                <Badge
+                  size="md"
+                  variant="filled"
+                  color="blue"
+                >
+                  {tag}
+                </Badge>
+                <ActionIcon
+                  size="xs"
+                  color="red"
+                  variant="subtle"
+                  onClick={() => handleRemoveTag(tag)}
+                  disabled={disabled}
+                  radius="xl"
+                >
+                  <IconX size={14} />
+                </ActionIcon>
+              </Flex>
+            ))}
+          </Flex>
+        ) : (
+          <Text size="xs" color="dimmed" mb={10}>
+            No tags added yet
+          </Text>
+        )}
+      </Box>
       
-      <Group>
+      {/* Add new tag input */}
+      <Flex gap="sm">
         <TextInput
           placeholder="Add a tag"
           value={newTag}
           onChange={(e) => setNewTag(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleAddTag();
+            }
+          }}
           disabled={disabled || tags.length >= 5}
-          className="flex-1"
+          style={{ flex: 1 }}
           size="xs"
+          rightSection={
+            tags.length >= 5 ? (
+              <Text size="xs" color="dimmed" mr={8}>
+                Max reached
+              </Text>
+            ) : null
+          }
         />
         <Button
-          type="button"
           onClick={handleAddTag}
           disabled={!newTag.trim() || tags.length >= 5 || disabled}
-          variant="outline"
+          variant="light"
           size="xs"
+          color="blue"
+          leftSection={<IconPlus size={14} />}
         >
           Add
         </Button>
-      </Group>
-    </Box>
+      </Flex>
+    </Stack>
   );
 } 

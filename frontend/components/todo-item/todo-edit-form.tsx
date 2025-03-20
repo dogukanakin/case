@@ -1,6 +1,6 @@
 'use client';
 
-import { Button, Group, Select, TextInput, Textarea } from '@mantine/core';
+import { Button, Group, Select, TextInput, Textarea, Stack, Flex, Box } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
 import { Todo, UpdateTodoInput, Priority } from '@/types/todo';
 import TodoTags from './todo-tags';
@@ -40,26 +40,31 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
   } = useTodoEditForm(todo, onSave);
 
   return (
-    <div className="space-y-4">
+    <Stack gap="md">
+      {/* Title Input */}
       <TextInput
         value={title}
         onChange={(e) => setTitle(e.target.value)}
         placeholder="Todo title"
+        label="Title"
         required
         disabled={isLoading || disabled}
         size="md"
-        className="font-medium"
+        styles={{ input: { fontWeight: 500 } }}
       />
       
+      {/* Description Textarea */}
       <Textarea
         value={description}
         onChange={(e) => setDescription(e.target.value)}
         placeholder="Description (optional)"
+        label="Description"
         minRows={2}
         disabled={isLoading || disabled}
         size="sm"
       />
       
+      {/* Priority Select */}
       <Select
         value={priority}
         onChange={(value) => value && setPriority(value as Priority)}
@@ -69,25 +74,38 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
         disabled={isLoading || disabled}
       />
       
-      <TodoTags 
-        tags={tags} 
-        onTagsChange={setTags} 
-        disabled={isLoading || disabled} 
-      />
+      {/* Tags Input */}
+      <Box>
+        <Flex align="center" mb={5}>
+          <Box component="label" fw={500} fz="sm">Tags</Box>
+        </Flex>
+        <TodoTags 
+          tags={tags} 
+          onTagsChange={setTags} 
+          disabled={isLoading || disabled} 
+        />
+      </Box>
       
-      <TodoFiles 
-        imageUrl={todo.imageUrl}
-        fileUrl={todo.fileUrl}
-        fileName={todo.fileName}
-        onImageChange={setNewImageFile}
-        onFileChange={setNewAttachmentFile}
-        onRemoveImage={() => setRemoveImage(true)}
-        onRemoveFile={() => setRemoveFile(true)}
-        removeImage={removeImage}
-        removeFile={removeFile}
-        disabled={isLoading || disabled}
-      />
+      {/* Files Upload */}
+      <Box>
+        <Flex align="center" mb={5}>
+          <Box component="label" fw={500} fz="sm">Attachments</Box>
+        </Flex>
+        <TodoFiles 
+          imageUrl={todo.imageUrl}
+          fileUrl={todo.fileUrl}
+          fileName={todo.fileName}
+          onImageChange={setNewImageFile}
+          onFileChange={setNewAttachmentFile}
+          onRemoveImage={() => setRemoveImage(true)}
+          onRemoveFile={() => setRemoveFile(true)}
+          removeImage={removeImage}
+          removeFile={removeFile}
+          disabled={isLoading || disabled}
+        />
+      </Box>
       
+      {/* AI Recommendation */}
       {todo.recommendation && (
         <TodoRecommendation 
           recommendation={todo.recommendation} 
@@ -95,7 +113,8 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
         />
       )}
       
-      <Group justify="flex-end" className="mt-4 gap-2">
+      {/* Action Buttons */}
+      <Flex justify="flex-end" gap="sm" mt="sm">
         <Button
           onClick={onCancel}
           variant="subtle"
@@ -115,7 +134,7 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
         >
           Save
         </Button>
-      </Group>
-    </div>
+      </Flex>
+    </Stack>
   );
 } 

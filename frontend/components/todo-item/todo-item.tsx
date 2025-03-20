@@ -1,7 +1,7 @@
 'use client';
 
 import { Todo, UpdateTodoInput } from '@/types/todo';
-import { ActionIcon, Badge, Checkbox, Group, Paper, Text } from '@mantine/core';
+import { ActionIcon, Badge, Checkbox, Group, Paper, Stack, Flex, Text } from '@mantine/core';
 import { IconAlarm, IconPencil, IconTag, IconTrash } from '@tabler/icons-react';
 import TodoEditForm from './todo-edit-form';
 import TodoFiles from './todo-files';
@@ -45,72 +45,81 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         />
       ) : (
         <div>
-          <Group align="flex-start" justify="space-between" className="flex-nowrap">
-            <Group align="flex-start" className="flex-nowrap gap-2 flex-1 min-w-0">
-              <Checkbox
-                checked={isCompleted}
-                onChange={handleToggleComplete}
-                disabled={isLoading}
-                size="md"
-                radius="xl"
-                className="mt-1"
-              />
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-wrap items-center gap-2 mb-1">
-                  <h3 className={`text-lg font-medium truncate ${isCompleted ? 'line-through text-gray-500' : ''}`}>
-                    {todo.title}
-                  </h3>
-                  <Badge 
-                    color={getPriorityColor(todo.priority)} 
-                    size="sm" 
-                    radius="sm"
-                    variant="filled"
-                    className="capitalize"
-                  >
-                    {todo.priority}
-                  </Badge>
-                </div>
-                
-                {todo.description && (
-                  <p className={`mt-1 text-sm ${isCompleted ? 'line-through text-gray-400' : 'text-gray-600'}`}>
-                    {todo.description}
-                  </p>
-                )}
+          <Flex align="flex-start" justify="space-between" gap="md">
+            {/* Left side with checkbox */}
+            <Checkbox
+              checked={isCompleted}
+              onChange={handleToggleComplete}
+              disabled={isLoading}
+              size="md"
+              radius="xl"
+              className="mt-1 flex-shrink-0"
+            />
+            
+            {/* Center content */}
+            <Stack gap="xs" className="flex-grow min-w-0">
+              {/* Title and priority badge */}
+              <Flex wrap="wrap" align="center" gap="xs">
+                <Text component="h3" className={`text-lg font-medium truncate ${isCompleted ? 'line-through text-gray-500' : ''}`} style={{ flexGrow: 1, minWidth: 0 }}>
+                  {todo.title}
+                </Text>
+                <Badge 
+                  color={getPriorityColor(todo.priority)} 
+                  size="sm" 
+                  radius="sm"
+                  variant="filled"
+                  className="capitalize flex-shrink-0"
+                >
+                  {todo.priority}
+                </Badge>
+              </Flex>
+              
+              {/* Description */}
+              {todo.description && (
+                <Text className={`text-sm ${isCompleted ? 'line-through text-gray-400' : 'text-gray-600'}`}>
+                  {todo.description}
+                </Text>
+              )}
 
-                {/* Display image and file attachment */}
+              {/* Display image and file attachment */}
+              {(todo.imageUrl || todo.fileUrl) && (
                 <TodoFiles 
                   imageUrl={todo.imageUrl}
                   fileUrl={todo.fileUrl}
                   fileName={todo.fileName}
                   readOnly={true}
                 />
-                
-                {/* Display AI recommendation */}
-                {todo.recommendation && (
-                  <TodoRecommendation 
-                    recommendation={todo.recommendation} 
+              )}
+              
+              {/* Display AI recommendation */}
+              {todo.recommendation && (
+                <TodoRecommendation 
+                  recommendation={todo.recommendation} 
+                />
+              )}
+              
+              {/* Display tags */}
+              {todo.tags.length > 0 && (
+                <Flex align="center" gap="xs">
+                  <IconTag size={14} className="text-blue-500 flex-shrink-0" />
+                  <TodoTags 
+                    tags={todo.tags} 
+                    readOnly={true} 
                   />
-                )}
-                
-                {/* Display tags */}
-                {todo.tags.length > 0 && (
-                  <Group className="mt-3 gap-1">
-                    <IconTag size={14} className="text-blue-500" />
-                    <TodoTags 
-                      tags={todo.tags} 
-                      readOnly={true} 
-                    />
-                  </Group>
-                )}
-                
-                <Group className="mt-3 text-xs text-gray-400 items-center gap-1">
-                  <IconAlarm size={14} />
-                  <span>{new Date(todo.createdAt).toLocaleString()}</span>
-                </Group>
-              </div>
-            </Group>
+                </Flex>
+              )}
+              
+              {/* Creation date */}
+              <Flex align="center" className="text-xs text-gray-400" gap="xs">
+                <IconAlarm size={14} className="flex-shrink-0" />
+                <Text size="xs" color="dimmed">
+                  {new Date(todo.createdAt).toLocaleString()}
+                </Text>
+              </Flex>
+            </Stack>
             
-            <Group className="gap-1">
+            {/* Right side with action buttons */}
+            <Flex gap="xs" className="flex-shrink-0">
               <ActionIcon 
                 onClick={() => setIsEditing(true)} 
                 size="md" 
@@ -131,8 +140,8 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
               >
                 <IconTrash size={16} />
               </ActionIcon>
-            </Group>
-          </Group>
+            </Flex>
+          </Flex>
         </div>
       )}
     </Paper>

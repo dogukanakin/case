@@ -1,7 +1,7 @@
 'use client'
 
 import React from 'react'
-import { Alert, Container, Loader, Paper, Box, Transition } from '@mantine/core'
+import { Alert, Container, Loader, Paper, Box, Transition, Space } from '@mantine/core'
 import { IconAlertCircle } from '@tabler/icons-react'
 import AddTodoForm from '@/components/add-todo-form'
 
@@ -79,6 +79,8 @@ export default function TodosPage() {
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
         />
+        
+        <Space h="md" />
         
         {/* Error Alert */}
         {error && (
