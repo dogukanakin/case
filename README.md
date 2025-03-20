@@ -7,6 +7,21 @@ This guide explains how to set up and run the To-Do application using Docker.
 - [Docker](https://www.docker.com/products/docker-desktop/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
+## Environment Setup
+
+Before running the application, you need to set up your environment variables:
+
+1. Copy the example environment file to create your own `.env` file:
+   ```bash
+   cp .env.example .env
+   ```
+
+2. Edit the `.env` file and update the variables with your own values:
+   - Generate a secure JWT secret (you can use `openssl rand -base64 32`)
+   - Set your MongoDB connection string
+   - Add your OpenAI API key (for AI todo recommendations)
+
+
 ## Docker Setup
 
 ### Production Setup
@@ -50,6 +65,12 @@ You can configure the application by editing the `.env` file. Important settings
 - `JWT_SECRET`: Secret key for JWT token encryption
 - `JWT_EXPIRES_IN`: JWT token expiration period
 - `OPENAI_API_KEY`: OpenAI API key (for Todo recommendations)
+
+Example values can be found in the `.env.example` file. For a fresh installation, you should:
+```bash
+cp .env.example .env
+# Then edit the .env file with your specific values
+```
 
 ## Viewing Logs
 
