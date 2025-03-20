@@ -1,25 +1,5 @@
-import mongoose, { Document, Schema } from 'mongoose';
-
-export enum Priority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high'
-}
-
-export interface ITodo extends Document {
-  title: string;
-  description: string;
-  completed: boolean;
-  priority: Priority;
-  tags: string[];
-  recommendation: string;
-  imageUrl?: string;
-  fileName?: string;
-  fileUrl?: string;
-  user: mongoose.Types.ObjectId;
-  createdAt: Date;
-  updatedAt: Date;
-}
+import mongoose, { Schema } from 'mongoose';
+import { ITodo, Priority } from '../interfaces/todo.interfaces';
 
 const todoSchema = new Schema<ITodo>(
   {

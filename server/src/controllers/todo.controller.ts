@@ -1,48 +1,61 @@
 import { Request, Response } from 'express';
-import Todo, { Priority } from '../models/todo.model';
+import Todo from '../models/todo.model';
 import mongoose from 'mongoose';
 import fs from 'fs';
 import path from 'path';
 import { generateTodoRecommendation } from '../services/openai.service';
+import { 
+  ITodo, 
+  Priority, 
+  IAuthenticatedRequest, 
+  ITodoFilterParams,
+  ITodoPaginationResponse,
+  ICreateTodoRequest,
+  IUpdateTodoRequest
+} from '../interfaces/todo.interfaces';
+import { IErrorResponse } from '../interfaces/response.interfaces';
 
 // Get all todos for the logged-in user
-export const getTodos = async (req: Request, res: Response): Promise<void> => {
+export const getTodos = async (req: IAuthenticatedRequest, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     
     if (!userId) {
-      res.status(401).json({ message: 'User not authenticated' });
+      res.status(401).json({ error: 'User not authenticated' } as IErrorResponse);
       return;
     }
 
     // Query parametrelerini al
-    const status = req.query.status as string; // 'active', 'completed', veya undefined
-    const priority = req.query.priority as Priority | undefined;
-    const searchQuery = req.query.search as string | undefined;
+    const filterParams: ITodoFilterParams = {
+      status: req.query.status as 'active' | 'completed' | undefined,
+      priority: req.query.priority as Priority | undefined,
+      search: req.query.search as string | undefined,
+      page: req.query.page ? parseInt(req.query.page as string) : 1,
+      limit: req.query.limit ? parseInt(req.query.limit as string) : 3
+    };
     
-    // Sayfalama parametrelerini al
-    const page = parseInt(req.query.page as string) || 1;
-    const limit = parseInt(req.query.limit as string) || 3;
+    const page = filterParams.page || 1;
+    const limit = filterParams.limit || 3;
     const skip = (page - 1) * limit;
     
     // Temel sorgu - kullanıcıya ait todo'lar
     let query: any = { user: userId };
     
     // Status filtresi ekle
-    if (status === 'active') {
+    if (filterParams.status === 'active') {
       query.completed = false;
-    } else if (status === 'completed') {
+    } else if (filterParams.status === 'completed') {
       query.completed = true;
     }
     
     // Priority filtresi ekle
-    if (priority) {
-      query.priority = priority;
+    if (filterParams.priority) {
+      query.priority = filterParams.priority;
     }
     
     // Arama sorgusu ekle - başlık veya açıklamada metin araması
-    if (searchQuery && searchQuery.trim()) {
-      const searchRegex = new RegExp(searchQuery.trim(), 'i'); // case-insensitive regex
+    if (filterParams.search && filterParams.search.trim()) {
+      const searchRegex = new RegExp(filterParams.search.trim(), 'i'); // case-insensitive regex
       query.$or = [
         { title: searchRegex },
         { description: searchRegex },
@@ -65,8 +78,8 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
       .limit(limit);
     
     // Meta verilerle birlikte sonuçları döndür
-    res.status(200).json({
-      todos,
+    const response: ITodoPaginationResponse = {
+      todos: todos as unknown as ITodo[],
       pagination: {
         total: totalTodos,
         page,
@@ -78,10 +91,15 @@ export const getTodos = async (req: Request, res: Response): Promise<void> => {
         active: totalActive,
         completed: totalCompleted
       }
-    });
+    };
+    
+    res.status(200).json(response);
   } catch (error) {
     console.error('Error fetching todos:', error);
-    res.status(500).json({ message: 'Server error', error: (error as Error).message });
+    res.status(500).json({ 
+      error: 'Server error', 
+      message: (error as Error).message 
+    } as IErrorResponse);
   }
 };
 

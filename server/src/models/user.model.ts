@@ -1,14 +1,6 @@
-import mongoose, { Document, Schema } from 'mongoose';
+import mongoose, { Schema } from 'mongoose';
 import bcrypt from 'bcrypt';
-
-export interface IUser {
-  isModified(arg0: string): unknown;
-  _id: mongoose.Types.ObjectId;
-  username: string;
-  email: string;
-  password: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
-}
+import { IUser } from '../interfaces/user.interfaces';
 
 const userSchema = new Schema<IUser>(
   {
