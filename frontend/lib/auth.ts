@@ -35,24 +35,24 @@ export const loginUser = async (credentials: LoginCredentials): Promise<User> =>
     
     return response.data;
   } catch (error: any) {
-    // Hata mesajı hazırlama
-    let message = 'Giriş işlemi başarısız oldu. Lütfen daha sonra tekrar deneyin.';
+    // Prepare error message
+    let message = 'Login failed. Please try again later.';
     
-    // API'den gelen hata durumlarına göre mesaj
+    // Message based on API error conditions
     if (error.response) {
       const status = error.response.status;
       if (status === 401) {
-        message = 'E-posta veya şifre hatalı. Lütfen bilgilerinizi kontrol edin.';
+        message = 'Email or password is incorrect. Please check your credentials.';
       } else if (status === 404) {
-        message = 'Kullanıcı bulunamadı. Lütfen e-posta adresinizi kontrol edin.';
+        message = 'User not found. Please check your email address.';
       } else if (status === 429) {
-        message = 'Çok fazla başarısız giriş denemesi. Lütfen daha sonra tekrar deneyin.';
+        message = 'Too many failed login attempts. Please try again later.';
       }
     }
     
-    // Tüm hatalar için tek bir hata nesnesi oluştur
+    // Create a single error object for all errors
     const customError = new Error(message);
-    // Hata sınıfını ezme
+    // Override error class
     customError.name = 'AuthError';
     throw customError;
   }
@@ -77,10 +77,10 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Us
     
     return response.data;
   } catch (error: any) {
-    // Hata mesajı hazırlama
-    let message = 'Kayıt işlemi başarısız oldu. Lütfen daha sonra tekrar deneyin.';
+    // Prepare error message
+    let message = 'Registration failed. Please try again later.';
     
-    // API'den gelen hata durumlarına göre mesaj
+    // Message based on API error conditions
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
@@ -89,16 +89,16 @@ export const registerUser = async (credentials: RegisterCredentials): Promise<Us
         if (data && data.error) {
           message = data.error;
         } else {
-          message = 'Geçersiz kayıt bilgileri. Lütfen girdiğiniz bilgileri kontrol edin.';
+          message = 'Invalid registration information. Please check your details.';
         }
       } else if (status === 409) {
-        message = 'Bu e-posta adresi zaten kullanılıyor. Lütfen farklı bir e-posta deneyin.';
+        message = 'This email address is already in use. Please try a different email.';
       }
     }
     
-    // Tüm hatalar için tek bir hata nesnesi oluştur
+    // Create a single error object for all errors
     const customError = new Error(message);
-    // Hata sınıfını ezme
+    // Override error class
     customError.name = 'AuthError';
     throw customError;
   }
@@ -140,32 +140,32 @@ export const changePassword = async (credentials: PasswordChangeCredentials): Pr
     const response = await api.put('/auth/change-password', credentials);
     return response.data;
   } catch (error: any) {
-    // Hata mesajı hazırlama
-    let message = 'Şifre değiştirme işlemi başarısız oldu. Lütfen daha sonra tekrar deneyin.';
+    // Prepare error message
+    let message = 'Password change failed. Please try again later.';
     
-    // API'den gelen hata durumlarına göre mesaj
+    // Message based on API error conditions
     if (error.response) {
       const status = error.response.status;
       const data = error.response.data;
       
       if (status === 401) {
         if (data && data.error === 'Current password is incorrect') {
-          message = 'Mevcut şifreniz yanlış. Lütfen tekrar deneyin.';
+          message = 'Your current password is incorrect. Please try again.';
         } else {
-          message = 'Oturum süreniz dolmuş. Lütfen tekrar giriş yapın.';
+          message = 'Your session has expired. Please login again.';
         }
       } else if (status === 400) {
         if (data && data.error) {
           message = data.error;
         } else {
-          message = 'Geçersiz şifre bilgileri. Şifreniz en az 6 karakter olmalıdır.';
+          message = 'Invalid password information. Your password must be at least 6 characters.';
         }
       }
     }
     
-    // Tüm hatalar için tek bir hata nesnesi oluştur
+    // Create a single error object for all errors
     const customError = new Error(message);
-    // Hata sınıfını ezme
+    // Override error class
     customError.name = 'AuthError';
     throw customError;
   }
