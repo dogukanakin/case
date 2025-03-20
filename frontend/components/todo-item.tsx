@@ -1,11 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Todo, UpdateTodoInput, Priority } from '@/types/todo';
 import { updateTodo, deleteTodo } from '@/lib/todo';
 import { UPLOADS_URL } from '@/lib/config';
-import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper, Image, Anchor, Text, ThemeIcon, Card, Tooltip } from '@mantine/core';
-import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag, IconDownload, IconPhoto, IconFile, IconBulb, IconInfoCircle } from '@tabler/icons-react';
+import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper, Image, Anchor, Text, ThemeIcon, Card, Tooltip, FileInput } from '@mantine/core';
+import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag, IconDownload, IconPhoto, IconFile, IconBulb, IconInfoCircle, IconUpload } from '@tabler/icons-react';
 
 interface TodoItemProps {
   todo: Todo;
@@ -24,6 +24,8 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [removeImage, setRemoveImage] = useState(false);
   const [removeFile, setRemoveFile] = useState(false);
+  const [newImageFile, setNewImageFile] = useState<File | null>(null);
+  const [newAttachmentFile, setNewAttachmentFile] = useState<File | null>(null);
 
   const priorityOptions = [
     { value: Priority.LOW, label: 'Low' },
@@ -84,9 +86,21 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         removeFile: removeFile
       };
       
-      const updatedTodo = await updateTodo(todo._id, updateData);
+      const updatedTodo = await updateTodo(
+        todo._id, 
+        updateData, 
+        newImageFile, 
+        newAttachmentFile
+      );
+      
       onUpdate(updatedTodo);
       setIsEditing(false);
+      
+      // Reset file states after save
+      setNewImageFile(null);
+      setNewAttachmentFile(null);
+      setRemoveImage(false);
+      setRemoveFile(false);
     } catch (error) {
       console.error('Error updating todo:', error);
     } finally {
@@ -99,6 +113,8 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     setEditedDescription(todo.description);
     setEditedPriority(todo.priority);
     setEditedTags([...todo.tags]);
+    setNewImageFile(null);
+    setNewAttachmentFile(null);
     setRemoveImage(false);
     setRemoveFile(false);
     setIsEditing(false);
@@ -202,51 +218,51 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
             size="sm"
           />
           <Select
-            label="Priority"
             value={editedPriority}
             onChange={(value) => setEditedPriority(value as Priority)}
             data={priorityOptions}
+            label="Priority"
+            placeholder="Select priority"
             disabled={isLoading}
-            size="sm"
           />
           
-          <Box>
-            <Group justify="space-between" mb="xs">
-              <Box className="text-sm font-medium">Tags (max 5)</Box>
-              <Badge size="sm" radius="sm" color="gray">
-                {editedTags.length}/5
-              </Badge>
-            </Group>
+          {/* Tags input */}
+          <Box className="space-y-2">
+            <Box className="text-sm font-medium">Tags (max 5)</Box>
+            <Text size="xs" className="text-gray-500 -mt-1 mb-1">
+              {editedTags.length}/5
+            </Text>
             
-            <Group mb="sm" className="flex-wrap">
+            <div className="flex flex-wrap gap-1 mb-2">
               {editedTags.map((tag) => (
-                <Badge 
-                  key={tag} 
-                  color="blue" 
-                  variant="outline"
-                  className="py-1"
+                <Badge
+                  key={tag}
+                  size="lg"
+                  variant="filled"
+                  color="blue"
                   rightSection={
-                    <ActionIcon 
-                      size="xs" 
-                      color="blue" 
-                      variant="transparent"
+                    <ActionIcon
+                      size="xs"
+                      color="blue"
                       onClick={() => handleRemoveTag(tag)}
-                      className="ml-1"
+                      radius="xl"
+                      variant="transparent"
                     >
-                      <IconX size={12} />
+                      <IconX size={10} />
                     </ActionIcon>
                   }
                 >
                   {tag}
                 </Badge>
               ))}
-            </Group>
+            </div>
             
-            <Group className="mb-2">
+            <Group>
               <TextInput
+                placeholder="Add a tag"
                 value={newTag}
                 onChange={(e) => setNewTag(e.target.value)}
-                placeholder="Add a tag"
+                onKeyDown={(e) => e.key === 'Enter' && handleAddTag()}
                 disabled={isLoading || editedTags.length >= 5}
                 className="flex-1"
                 size="xs"
@@ -263,57 +279,98 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
             </Group>
           </Box>
 
-          {/* Image management */}
-          {todo.imageUrl && !removeImage && (
-            <Box className="border p-2 rounded">
-              <Group justify="space-between" mb="xs">
-                <Text size="xs" fw={500}><IconPhoto size={14} className="inline mr-1"/>Image Thumbnail</Text>
-                <Button 
-                  variant="subtle" 
-                  color="red" 
-                  size="xs" 
-                  onClick={() => setRemoveImage(true)}
-                  leftSection={<IconTrash size={12} />}
-                >
-                  Remove
-                </Button>
-              </Group>
-              <div style={{ maxWidth: '200px' }}>
-                <Image src={getFullImageUrl(todo.imageUrl)} alt="Thumbnail" width={200} height={200} fit="contain" style={{ width: 'auto' }} />
-              </div>
-            </Box>
-          )}
+          {/* Image Upload Section */}
+          <Box className="border p-3 rounded">
+            <Text fw={500} mb="xs" size="sm"><IconPhoto size={16} className="inline mr-2" />Image Upload</Text>
+            
+            {todo.imageUrl && !removeImage ? (
+              <Box className="mb-3">
+                <Group justify="space-between" mb="xs">
+                  <Text size="xs">Current Image:</Text>
+                  <Button 
+                    variant="subtle" 
+                    color="red" 
+                    size="xs" 
+                    onClick={() => setRemoveImage(true)}
+                    leftSection={<IconTrash size={12} />}
+                  >
+                    Remove
+                  </Button>
+                </Group>
+                <div style={{ maxWidth: '200px' }}>
+                  <Image src={getFullImageUrl(todo.imageUrl)} alt="Thumbnail" width={200} height={200} fit="contain" style={{ width: 'auto' }} />
+                </div>
+              </Box>
+            ) : (
+              <FileInput
+                placeholder="Upload a new image"
+                accept="image/png,image/jpeg,image/jpg"
+                leftSection={<IconUpload size={16} />}
+                onChange={setNewImageFile}
+                value={newImageFile}
+                clearable
+                size="xs"
+                className="mb-2"
+              />
+            )}
 
-          {/* File management */}
-          {todo.fileUrl && todo.fileName && !removeFile && (
-            <Box className="border p-2 rounded">
-              <Group justify="space-between" mb="xs">
-                <Text size="xs" fw={500}><IconFile size={14} className="inline mr-1"/>File Attachment</Text>
-                <Button 
-                  variant="subtle" 
-                  color="red" 
-                  size="xs" 
-                  onClick={() => setRemoveFile(true)}
-                  leftSection={<IconTrash size={12} />}
-                >
-                  Remove
-                </Button>
-              </Group>
-              <Group>
-                <Text size="xs" className="truncate">{todo.fileName}</Text>
-                <Button 
-                  size="xs" 
-                  variant="subtle" 
-                  color="blue" 
-                  onClick={() => handleFileDownload(todo.fileUrl!, todo.fileName!)}
-                  leftSection={<IconDownload size={12} />}
-                >
-                  Download
-                </Button>
-              </Group>
-            </Box>
-          )}
-          
+            {removeImage && (
+              <Text size="xs" color="red" mb="xs">
+                Current image will be removed upon saving
+              </Text>
+            )}
+          </Box>
+
+          {/* File Upload Section */}
+          <Box className="border p-3 rounded">
+            <Text fw={500} mb="xs" size="sm"><IconFile size={16} className="inline mr-2" />File Attachment</Text>
+            
+            {todo.fileUrl && todo.fileName && !removeFile ? (
+              <Box className="mb-3">
+                <Group justify="space-between" mb="xs">
+                  <Text size="xs">Current File: {todo.fileName}</Text>
+                  <Group gap={8}>
+                    <Button 
+                      size="xs" 
+                      variant="subtle" 
+                      color="blue" 
+                      onClick={() => handleFileDownload(todo.fileUrl!, todo.fileName!)}
+                      leftSection={<IconDownload size={12} />}
+                    >
+                      Download
+                    </Button>
+                    <Button 
+                      variant="subtle" 
+                      color="red" 
+                      size="xs" 
+                      onClick={() => setRemoveFile(true)}
+                      leftSection={<IconTrash size={12} />}
+                    >
+                      Remove
+                    </Button>
+                  </Group>
+                </Group>
+              </Box>
+            ) : (
+              <FileInput
+                placeholder="Upload a new PDF file"
+                accept="application/pdf"
+                leftSection={<IconUpload size={16} />}
+                onChange={setNewAttachmentFile}
+                value={newAttachmentFile}
+                clearable
+                size="xs"
+                className="mb-2"
+              />
+            )}
+
+            {removeFile && (
+              <Text size="xs" color="red" mb="xs">
+                Current file will be removed upon saving
+              </Text>
+            )}
+          </Box>
+
           {/* AI Recommendation (read-only in edit mode) */}
           {todo.recommendation && (
             <Card withBorder p="xs" radius="md" className="mt-3 bg-blue-50">

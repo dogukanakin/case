@@ -132,9 +132,9 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 
     // Handle uploaded files
     const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
-    let imageUrl = null;
-    let fileUrl = null;
-    let fileName = null;
+    let imageUrl: string | undefined = undefined;
+    let fileUrl: string | undefined = undefined;
+    let fileName: string | undefined = undefined;
 
     if (files) {
       // Handle image upload
@@ -256,7 +256,7 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       if (fs.existsSync(imagePath)) {
         fs.unlinkSync(imagePath);
       }
-      imageUrl = null;
+      imageUrl = undefined;
     }
 
     // Remove file if requested
@@ -265,8 +265,8 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
-      fileUrl = null;
-      fileName = null;
+      fileUrl = undefined;
+      fileName = undefined;
     }
 
     // Handle new uploads
