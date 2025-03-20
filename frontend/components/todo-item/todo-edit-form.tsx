@@ -2,7 +2,7 @@
 
 import { Button, Group, Select, TextInput, Textarea } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { Todo, UpdateTodoInput } from '@/types/todo';
+import { Todo, UpdateTodoInput, Priority } from '@/types/todo';
 import TodoTags from './todo-tags';
 import TodoFiles from './todo-files';
 import TodoRecommendation from './todo-recommendation';
@@ -62,7 +62,7 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
       
       <Select
         value={priority}
-        onChange={(value) => setPriority(value as string)}
+        onChange={(value) => value && setPriority(value as Priority)}
         data={priorityOptions}
         label="Priority"
         placeholder="Select priority"
