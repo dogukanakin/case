@@ -1,12 +1,7 @@
 'use client';
 
 import { Pagination } from '@mantine/core';
-
-interface TodoPaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onPageChange: (newPage: number) => void;
-}
+import { TodoPaginationProps } from '@/types/todo';
 
 export default function TodoPagination({ 
   currentPage, 

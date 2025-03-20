@@ -2,12 +2,7 @@
 
 import { TextInput, ActionIcon } from '@mantine/core';
 import { IconSearch, IconX } from '@tabler/icons-react';
-
-interface TodoSearchProps {
-  searchQuery: string;
-  onSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  onClearSearch: () => void;
-}
+import { TodoSearchProps } from '@/types/todo';
 
 export default function TodoSearch({ searchQuery, onSearchChange, onClearSearch }: TodoSearchProps) {
   return (

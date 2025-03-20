@@ -1,28 +1,6 @@
 import { useState } from 'react';
-import { Todo, UpdateTodoInput } from '@/types/todo';
+import { Todo, UpdateTodoInput, UseTodoItemReturn } from '@/types/todo';
 import { updateTodo, deleteTodo } from '@/lib/todo';
-
-interface UseTodoItemReturn {
-  // States
-  isEditing: boolean;
-  isCompleted: boolean;
-  isLoading: boolean;
-  
-  // UI handlers
-  setIsEditing: (value: boolean) => void;
-  
-  // Action handlers
-  handleToggleComplete: () => Promise<void>;
-  handleSaveEdit: (
-    updateData: UpdateTodoInput, 
-    newImageFile?: File | null, 
-    newAttachmentFile?: File | null
-  ) => Promise<void>;
-  handleDelete: () => Promise<void>;
-  
-  // Utilities
-  getPriorityColor: (priority: string) => string;
-}
 
 export function useTodoItem(
   todo: Todo,

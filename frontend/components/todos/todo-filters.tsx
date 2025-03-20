@@ -2,17 +2,7 @@
 
 import { Tabs, Badge, ActionIcon, Text, Group } from '@mantine/core';
 import { IconList, IconClock, IconCheck } from '@tabler/icons-react';
-import { Priority } from '@/types/todo';
-
-interface TodoFiltersProps {
-  activeTab: string;
-  selectedPriority: Priority | null;
-  totalAll: number;
-  totalActive: number;
-  totalCompleted: number;
-  onTabChange: (value: string | null) => void;
-  onPriorityChange: (priority: Priority | null) => void;
-}
+import { Priority, TodoFiltersProps } from '@/types/todo';
 
 export default function TodoFilters({
   activeTab,

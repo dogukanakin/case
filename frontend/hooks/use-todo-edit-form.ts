@@ -1,34 +1,5 @@
 import { useState } from 'react';
-import { Priority, Todo, UpdateTodoInput } from '@/types/todo';
-
-interface UseTodoEditFormReturn {
-  // Form state
-  title: string;
-  description: string;
-  priority: string;
-  tags: string[];
-  removeImage: boolean;
-  removeFile: boolean;
-  newImageFile: File | null;
-  newAttachmentFile: File | null;
-  isLoading: boolean;
-  
-  // Form options
-  priorityOptions: { value: string; label: string }[];
-  
-  // Form handlers
-  setTitle: (value: string) => void;
-  setDescription: (value: string) => void;
-  setPriority: (value: string) => void;
-  setTags: (value: string[]) => void;
-  setRemoveImage: (value: boolean) => void;
-  setRemoveFile: (value: boolean) => void;
-  setNewImageFile: (file: File | null) => void;
-  setNewAttachmentFile: (file: File | null) => void;
-  
-  // Form submission
-  handleSubmit: () => Promise<void>;
-}
+import { Priority, Todo, UpdateTodoInput, UseTodoEditFormReturn } from '@/types/todo';
 
 export function useTodoEditForm(
   todo: Todo,

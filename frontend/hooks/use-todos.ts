@@ -1,36 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useDebouncedValue } from '@mantine/hooks';
-import { Todo, Priority } from '@/types/todo';
+import { Todo, Priority, UseTodosReturn } from '@/types/todo';
 import { getTodos } from '@/lib/todo';
 import { isAuthenticated } from '@/lib/auth';
-
-interface UseTodosReturn {
-  // States
-  todos: Todo[];
-  loading: boolean;
-  error: string | null;
-  activeTab: string;
-  selectedPriority: Priority | null;
-  currentPage: number;
-  totalPages: number;
-  totalTodos: number;
-  totalAll: number;
-  totalActive: number;
-  totalCompleted: number;
-  searchQuery: string;
-  
-  // Actions
-  fetchTodos: () => Promise<void>;
-  handleAddTodo: (newTodo: Todo) => Promise<void>;
-  handleUpdateTodo: (updatedTodo: Todo) => Promise<void>;
-  handleDeleteTodo: (id: string) => Promise<void>;
-  handleTabChange: (value: string | null) => void;
-  handlePageChange: (newPage: number) => void;
-  handlePriorityChange: (priority: Priority | null) => void;
-  handleSearchChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
-  handleClearSearch: () => void;
-  clearPriority: () => void;
-}
 
 export function useTodos(): UseTodosReturn {
   // States

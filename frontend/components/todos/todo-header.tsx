@@ -3,11 +3,7 @@
 import { Button, Group, Text, Title, Paper, Container } from '@mantine/core';
 import { IconList, IconLogout, IconUser } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-
-interface TodoHeaderProps {
-  username: string;
-  onLogout: () => void;
-}
+import { TodoHeaderProps } from '@/types/todo';
 
 export default function TodoHeader({ username, onLogout }: TodoHeaderProps) {
   const router = useRouter();

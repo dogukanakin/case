@@ -1,28 +1,5 @@
 import { API_URL } from './config';
-import { CreateTodoInput, Todo, UpdateTodoInput, Priority } from '@/types/todo';
-
-interface TodoFilterParams {
-  status?: 'active' | 'completed' | 'all';
-  priority?: Priority | null;
-  page?: number;
-  limit?: number;
-  search?: string;
-}
-
-interface TodosResponse {
-  todos: Todo[];
-  pagination: {
-    total: number;
-    page: number;
-    limit: number;
-    pages: number;
-  };
-  counts: {
-    all: number;
-    active: number;
-    completed: number;
-  };
-}
+import { CreateTodoInput, Todo, UpdateTodoInput, Priority, TodoFilterParams, TodosResponse } from '@/types/todo';
 
 // Get all todos for the logged-in user with filters and pagination
 export const getTodos = async ({ status, priority, page = 1, limit = 3, search }: TodoFilterParams = {}): Promise<TodosResponse> => {

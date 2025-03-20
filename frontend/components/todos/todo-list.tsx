@@ -2,20 +2,8 @@
 
 import { Alert, Badge, Card, Group, Loader, Paper, Text, Title, ActionIcon } from '@mantine/core';
 import { IconList, IconX } from '@tabler/icons-react';
-import { Todo, Priority } from '@/types/todo';
+import { Todo, Priority, TodoListProps } from '@/types/todo';
 import TodoItem from '@/components/todo-item/todo-item';
-
-interface TodoListProps {
-  todos: Todo[];
-  loading: boolean;
-  activeTab: string;
-  selectedPriority: Priority | null;
-  totalTodos: number;
-  searchQuery: string;
-  onUpdateTodo: (updatedTodo: Todo) => void;
-  onDeleteTodo: (id: string) => void;
-  onClearPriority: () => void;
-}
 
 export default function TodoList({ 
   todos, 
