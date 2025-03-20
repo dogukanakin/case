@@ -80,25 +80,7 @@ export default function Navbar() {
               </Button>
             </Group>
           ) : (
-            <Group>
-              <Button
-                onClick={() => router.push('/login')}
-                color="blue"
-                variant="outline"
-                radius="md"
-                size="sm"
-              >
-                Login
-              </Button>
-              <Button
-                onClick={() => router.push('/register')}
-                color="blue"
-                radius="md"
-                size="sm"
-              >
-                Register
-              </Button>
-            </Group>
+          null
           )}
         </Group>
       </Container>
