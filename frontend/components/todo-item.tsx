@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Todo, UpdateTodoInput, Priority } from '@/types/todo';
 import { updateTodo, deleteTodo } from '@/lib/todo';
-import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper } from '@mantine/core';
-import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag } from '@tabler/icons-react';
+import { UPLOADS_URL } from '@/lib/config';
+import { Button, Checkbox, TextInput, Textarea, ActionIcon, Select, Badge, Group, Box, Paper, Image, Anchor, Text } from '@mantine/core';
+import { IconPencil, IconTrash, IconX, IconCheck, IconAlarm, IconTag, IconDownload, IconPhoto, IconFile } from '@tabler/icons-react';
 
 interface TodoItemProps {
   todo: Todo;
@@ -21,6 +22,8 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
   const [newTag, setNewTag] = useState('');
   const [isCompleted, setIsCompleted] = useState(todo.completed);
   const [isLoading, setIsLoading] = useState(false);
+  const [removeImage, setRemoveImage] = useState(false);
+  const [removeFile, setRemoveFile] = useState(false);
 
   const priorityOptions = [
     { value: Priority.LOW, label: 'Low' },
@@ -76,7 +79,9 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
         title: editedTitle,
         description: editedDescription,
         priority: editedPriority,
-        tags: editedTags
+        tags: editedTags,
+        removeImage: removeImage,
+        removeFile: removeFile
       };
       
       const updatedTodo = await updateTodo(todo._id, updateData);
@@ -94,6 +99,8 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
     setEditedDescription(todo.description);
     setEditedPriority(todo.priority);
     setEditedTags([...todo.tags]);
+    setRemoveImage(false);
+    setRemoveFile(false);
     setIsEditing(false);
   };
 
@@ -104,6 +111,64 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
       onDelete(todo._id);
     } catch (error) {
       console.error('Error deleting todo:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Helper function to ensure image URLs are correctly formed
+  const getFullImageUrl = (imageUrl: string | undefined) => {
+    if (!imageUrl) return '';
+    
+    // If the URL already starts with http, it's already a full URL
+    if (imageUrl.startsWith('http')) {
+      return imageUrl;
+    }
+    
+    // If URL starts with /uploads, remove the leading slash
+    const normalizedUrl = imageUrl.startsWith('/uploads/') 
+      ? imageUrl.substring(8) 
+      : imageUrl.startsWith('uploads/') 
+        ? imageUrl.substring(7) 
+        : imageUrl;
+    
+    return `${UPLOADS_URL}/${normalizedUrl}`;
+  };
+
+  // Function to handle file download
+  const handleFileDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      // Set loading state to show download is in progress
+      setIsLoading(true);
+      
+      // Get the full URL
+      const url = getFullImageUrl(fileUrl);
+      
+      // Fetch the file as a blob
+      const response = await fetch(url);
+      const blob = await response.blob();
+      
+      // Create a blob URL
+      const blobUrl = window.URL.createObjectURL(blob);
+      
+      // Create a link element
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName; // This is important for forcing download
+      a.style.display = 'none';
+      
+      // Append to the document
+      document.body.appendChild(a);
+      
+      // Trigger click
+      a.click();
+      
+      // Clean up
+      window.URL.revokeObjectURL(blobUrl);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      alert('Failed to download file. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -197,6 +262,57 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
               </Button>
             </Group>
           </Box>
+
+          {/* Image management */}
+          {todo.imageUrl && !removeImage && (
+            <Box className="border p-2 rounded">
+              <Group justify="space-between" mb="xs">
+                <Text size="xs" fw={500}><IconPhoto size={14} className="inline mr-1"/>Image Thumbnail</Text>
+                <Button 
+                  variant="subtle" 
+                  color="red" 
+                  size="xs" 
+                  onClick={() => setRemoveImage(true)}
+                  leftSection={<IconTrash size={12} />}
+                >
+                  Remove
+                </Button>
+              </Group>
+              <div style={{ maxWidth: '200px' }}>
+                <Image src={getFullImageUrl(todo.imageUrl)} alt="Thumbnail" width={200} height={200} fit="contain" style={{ width: 'auto' }} />
+              </div>
+            </Box>
+          )}
+
+          {/* File management */}
+          {todo.fileUrl && todo.fileName && !removeFile && (
+            <Box className="border p-2 rounded">
+              <Group justify="space-between" mb="xs">
+                <Text size="xs" fw={500}><IconFile size={14} className="inline mr-1"/>File Attachment</Text>
+                <Button 
+                  variant="subtle" 
+                  color="red" 
+                  size="xs" 
+                  onClick={() => setRemoveFile(true)}
+                  leftSection={<IconTrash size={12} />}
+                >
+                  Remove
+                </Button>
+              </Group>
+              <Group>
+                <Text size="xs" className="truncate">{todo.fileName}</Text>
+                <Button 
+                  size="xs" 
+                  variant="subtle" 
+                  color="blue" 
+                  onClick={() => handleFileDownload(todo.fileUrl!, todo.fileName!)}
+                  leftSection={<IconDownload size={12} />}
+                >
+                  Download
+                </Button>
+              </Group>
+            </Box>
+          )}
           
           <Group justify="flex-end" className="mt-4 gap-2">
             <Button
@@ -251,6 +367,37 @@ export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
                   <p className={`mt-1 text-sm ${isCompleted ? 'line-through text-gray-400' : 'text-gray-600'}`}>
                     {todo.description}
                   </p>
+                )}
+
+                {/* Display the image thumbnail if exists */}
+                {todo.imageUrl && (
+                  <div className="mt-3" style={{ maxWidth: '200px' }}>
+                    <Image 
+                      src={getFullImageUrl(todo.imageUrl)} 
+                      alt="Todo thumbnail" 
+                      width={200} 
+                      height={200} 
+                      radius="sm"
+                      fit="contain"
+                      className="border"
+                      style={{ width: 'auto' }}
+                    />
+                  </div>
+                )}
+
+                {/* Display the PDF file download link if exists */}
+                {todo.fileUrl && todo.fileName && (
+                  <Button 
+                    variant="subtle"
+                    size="xs"
+                    color="blue"
+                    leftSection={<IconFile size={16} />}
+                    rightSection={<IconDownload size={14} />}
+                    onClick={() => handleFileDownload(todo.fileUrl!, todo.fileName!)}
+                    className="mt-3 px-2"
+                  >
+                    <span className="truncate">{todo.fileName}</span>
+                  </Button>
                 )}
                 
                 {todo.tags.length > 0 && (

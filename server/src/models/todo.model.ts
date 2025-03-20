@@ -13,6 +13,9 @@ export interface ITodo extends Document {
   priority: Priority;
   tags: string[];
   recommendation: string;
+  imageUrl?: string;
+  fileName?: string;
+  fileUrl?: string;
   user: mongoose.Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -46,6 +49,18 @@ const todoSchema = new Schema<ITodo>(
     recommendation: {
       type: String,
       default: '',
+    },
+    imageUrl: {
+      type: String,
+      default: null,
+    },
+    fileName: {
+      type: String,
+      default: null,
+    },
+    fileUrl: {
+      type: String,
+      default: null,
     },
     user: {
       type: Schema.Types.ObjectId,

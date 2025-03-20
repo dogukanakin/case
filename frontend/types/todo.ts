@@ -12,6 +12,9 @@ export interface Todo {
   priority: Priority;
   tags: string[];
   recommendation: string;
+  imageUrl?: string | null;
+  fileUrl?: string | null;
+  fileName?: string | null;
   user: string;
   createdAt: string;
   updatedAt: string;
@@ -22,6 +25,7 @@ export interface CreateTodoInput {
   description?: string;
   priority?: Priority;
   tags?: string[];
+  // File fields will be sent as FormData
 }
 
 export interface UpdateTodoInput {
@@ -30,4 +34,7 @@ export interface UpdateTodoInput {
   completed?: boolean;
   priority?: Priority;
   tags?: string[];
+  removeImage?: boolean;
+  removeFile?: boolean;
+  // File fields will be sent as FormData
 } 

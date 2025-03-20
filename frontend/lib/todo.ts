@@ -59,12 +59,21 @@ export const getTodos = async ({ status, priority, page = 1, limit = 3, search }
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch todos');
+    if (response.status === 401) {
+      // Handle token expiration - redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Authentication token expired or invalid');
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      console.error('Error fetching todos:', responseData);
+      throw new Error(responseData.message || responseData.error || 'Failed to fetch todos');
+    }
+
+    return responseData;
   } catch (error) {
     console.error('Error fetching todos:', error);
     throw error;
@@ -88,20 +97,33 @@ export const getTodoById = async (id: string): Promise<Todo> => {
       },
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch todo');
+    if (response.status === 401) {
+      // Handle token expiration - redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Authentication token expired or invalid');
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    
+    if (!response.ok) {
+      console.error('Error fetching todo:', responseData);
+      throw new Error(responseData.message || responseData.error || 'Failed to fetch todo');
+    }
+
+    return responseData;
   } catch (error) {
     console.error('Error fetching todo:', error);
     throw error;
   }
 };
 
-// Create a new todo
-export const createTodo = async (todoData: CreateTodoInput): Promise<Todo> => {
+// Create a new todo with file uploads
+export const createTodo = async (
+  todoData: CreateTodoInput,
+  imageFile?: File | null,
+  attachmentFile?: File | null
+): Promise<Todo> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -115,15 +137,34 @@ export const createTodo = async (todoData: CreateTodoInput): Promise<Todo> => {
       formattedData.priority = formattedData.priority.toLowerCase() as Priority;
     }
 
+    // Use FormData to handle file uploads
+    const formData = new FormData();
+    
+    // Add todo data as JSON
+    formData.append('title', formattedData.title);
+    if (formattedData.description) formData.append('description', formattedData.description);
+    if (formattedData.priority) formData.append('priority', formattedData.priority);
+    
+    // Add tags as array
+    if (formattedData.tags && formattedData.tags.length > 0) {
+      formattedData.tags.forEach((tag, index) => {
+        formData.append(`tags[${index}]`, tag);
+      });
+    }
+    
+    // Add files if available
+    if (imageFile) formData.append('image', imageFile);
+    if (attachmentFile) formData.append('file', attachmentFile);
+
     console.log('Creating todo with data:', formattedData);
 
     const response = await fetch(`${API_URL}/todos`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type header, it will be set automatically with boundary by the browser
       },
-      body: JSON.stringify(formattedData),
+      body: formData,
     });
 
     if (response.status === 401) {
@@ -148,8 +189,13 @@ export const createTodo = async (todoData: CreateTodoInput): Promise<Todo> => {
   }
 };
 
-// Update a todo
-export const updateTodo = async (id: string, todoData: UpdateTodoInput): Promise<Todo> => {
+// Update a todo with file uploads
+export const updateTodo = async (
+  id: string, 
+  todoData: UpdateTodoInput,
+  imageFile?: File | null,
+  attachmentFile?: File | null
+): Promise<Todo> => {
   try {
     const token = localStorage.getItem('token');
     
@@ -163,15 +209,42 @@ export const updateTodo = async (id: string, todoData: UpdateTodoInput): Promise
       formattedData.priority = formattedData.priority.toLowerCase() as Priority;
     }
 
+    // Use FormData to handle file uploads
+    const formData = new FormData();
+    
+    // Add todo data
+    if (formattedData.title !== undefined) formData.append('title', formattedData.title);
+    if (formattedData.description !== undefined) formData.append('description', formattedData.description);
+    if (formattedData.completed !== undefined) formData.append('completed', String(formattedData.completed));
+    if (formattedData.priority !== undefined) formData.append('priority', formattedData.priority);
+    
+    // Add tags as array
+    if (formattedData.tags && formattedData.tags.length > 0) {
+      formattedData.tags.forEach((tag, index) => {
+        formData.append(`tags[${index}]`, tag);
+      });
+    } else if (formattedData.tags !== undefined) {
+      // Send empty array if tags is explicitly set to empty
+      formData.append('tags', '');
+    }
+    
+    // Add file removal flags
+    if (formattedData.removeImage) formData.append('removeImage', 'true');
+    if (formattedData.removeFile) formData.append('removeFile', 'true');
+    
+    // Add files if available
+    if (imageFile) formData.append('image', imageFile);
+    if (attachmentFile) formData.append('file', attachmentFile);
+
     console.log('Updating todo:', id, 'with data:', formattedData);
 
     const response = await fetch(`${API_URL}/todos/${id}`, {
       method: 'PUT',
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`,
+        // Don't set Content-Type header, it will be set automatically with boundary by the browser
       },
-      body: JSON.stringify(formattedData),
+      body: formData,
     });
 
     if (response.status === 401) {
@@ -213,9 +286,18 @@ export const deleteTodo = async (id: string): Promise<void> => {
       },
     });
 
+    if (response.status === 401) {
+      // Handle token expiration - redirect to login
+      localStorage.removeItem('token');
+      window.location.href = '/login';
+      throw new Error('Authentication token expired or invalid');
+    }
+
+    const responseData = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to delete todo');
+      console.error('Error deleting todo:', responseData);
+      throw new Error(responseData.message || responseData.error || 'Failed to delete todo');
     }
   } catch (error) {
     console.error('Error deleting todo:', error);

@@ -1,6 +1,8 @@
 import { Request, Response } from 'express';
 import Todo, { Priority } from '../models/todo.model';
 import mongoose from 'mongoose';
+import fs from 'fs';
+import path from 'path';
 
 // Get all todos for the logged-in user
 export const getTodos = async (req: Request, res: Response): Promise<void> => {
@@ -120,10 +122,30 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
 
     // Log the incoming request for debugging
     console.log('Create Todo Request Body:', req.body);
+    console.log('Create Todo Request Files:', req.files);
 
     if (!userId) {
       res.status(401).json({ message: 'User not authenticated' });
       return;
+    }
+
+    // Handle uploaded files
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    let imageUrl = null;
+    let fileUrl = null;
+    let fileName = null;
+
+    if (files) {
+      // Handle image upload
+      if (files.image && files.image[0]) {
+        imageUrl = `/uploads/images/${files.image[0].filename}`;
+      }
+
+      // Handle file upload
+      if (files.file && files.file[0]) {
+        fileUrl = `/uploads/files/${files.file[0].filename}`;
+        fileName = files.file[0].originalname;
+      }
     }
 
     // Create the todo with safe defaults
@@ -134,6 +156,9 @@ export const createTodo = async (req: Request, res: Response): Promise<void> => 
       priority: priority || Priority.MEDIUM,
       tags: Array.isArray(tags) ? tags : [],
       recommendation: '', // Empty for now, will be filled by ChatGPT later
+      imageUrl,
+      fileUrl,
+      fileName,
       user: userId,
     };
     
@@ -162,12 +187,13 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
   try {
     const userId = req.user?._id;
     const todoId = req.params.id;
-    const { title, description, completed, priority, tags } = req.body;
+    const { title, description, completed, priority, tags, removeImage, removeFile } = req.body;
 
     console.log('Update request received:', {
       userId,
       todoId,
       body: req.body,
+      files: req.files,
       headers: req.headers
     });
 
@@ -196,6 +222,59 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       return;
     }
 
+    // Handle file operations
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] } | undefined;
+    let imageUrl = existingTodo.imageUrl;
+    let fileUrl = existingTodo.fileUrl;
+    let fileName = existingTodo.fileName;
+
+    // Remove image if requested
+    if (removeImage && existingTodo.imageUrl) {
+      const imagePath = path.join(process.cwd(), 'uploads', existingTodo.imageUrl.replace('/uploads/', ''));
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+      imageUrl = null;
+    }
+
+    // Remove file if requested
+    if (removeFile && existingTodo.fileUrl) {
+      const filePath = path.join(process.cwd(), 'uploads', existingTodo.fileUrl.replace('/uploads/', ''));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      fileUrl = null;
+      fileName = null;
+    }
+
+    // Handle new uploads
+    if (files) {
+      // Handle new image upload
+      if (files.image && files.image[0]) {
+        // Remove old image if exists
+        if (existingTodo.imageUrl) {
+          const oldImagePath = path.join(process.cwd(), 'uploads', existingTodo.imageUrl.replace('/uploads/', ''));
+          if (fs.existsSync(oldImagePath)) {
+            fs.unlinkSync(oldImagePath);
+          }
+        }
+        imageUrl = `/uploads/images/${files.image[0].filename}`;
+      }
+
+      // Handle new file upload
+      if (files.file && files.file[0]) {
+        // Remove old file if exists
+        if (existingTodo.fileUrl) {
+          const oldFilePath = path.join(process.cwd(), 'uploads', existingTodo.fileUrl.replace('/uploads/', ''));
+          if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+          }
+        }
+        fileUrl = `/uploads/files/${files.file[0].filename}`;
+        fileName = files.file[0].originalname;
+      }
+    }
+
     // Prepare update data with safe handling of arrays
     const updateData = {
       title: title !== undefined ? title : existingTodo.title,
@@ -203,6 +282,9 @@ export const updateTodo = async (req: Request, res: Response): Promise<void> => 
       completed: completed !== undefined ? completed : existingTodo.completed,
       priority: priority !== undefined ? priority : existingTodo.priority,
       tags: tags !== undefined ? (Array.isArray(tags) ? tags : []) : existingTodo.tags,
+      imageUrl,
+      fileUrl,
+      fileName,
       // We're not updating recommendation here as it should be handled by the ChatGPT integration
     };
 
@@ -248,6 +330,21 @@ export const deleteTodo = async (req: Request, res: Response): Promise<void> => 
     if (!todo) {
       res.status(404).json({ message: 'Todo not found' });
       return;
+    }
+
+    // Delete associated files if they exist
+    if (todo.imageUrl) {
+      const imagePath = path.join(process.cwd(), 'uploads', todo.imageUrl.replace('/uploads/', ''));
+      if (fs.existsSync(imagePath)) {
+        fs.unlinkSync(imagePath);
+      }
+    }
+
+    if (todo.fileUrl) {
+      const filePath = path.join(process.cwd(), 'uploads', todo.fileUrl.replace('/uploads/', ''));
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
     }
 
     await Todo.findByIdAndDelete(todoId);

@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
-import { Button, TextInput, Textarea, Select, Paper, Group, Box, Badge, ActionIcon, Title } from '@mantine/core';
+import { useState, useRef } from 'react';
+import { Button, TextInput, Textarea, Select, Paper, Group, Box, Badge, ActionIcon, Title, FileInput, Text, Image } from '@mantine/core';
 import { createTodo } from '@/lib/todo';
 import { Todo, Priority } from '@/types/todo';
-import { IconPlus, IconX, IconListCheck } from '@tabler/icons-react';
+import { IconPlus, IconX, IconListCheck, IconUpload, IconFile, IconPhoto } from '@tabler/icons-react';
 
 interface AddTodoFormProps {
   onAddTodo: (newTodo: Todo) => void;
@@ -18,6 +18,9 @@ export default function AddTodoForm({ onAddTodo }: AddTodoFormProps) {
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const priorityOptions = [
     { value: Priority.LOW, label: 'Low Priority' },
@@ -36,6 +39,21 @@ export default function AddTodoForm({ onAddTodo }: AddTodoFormProps) {
     setTags(tags.filter(tag => tag !== tagToRemove));
   };
 
+  const handleImageChange = (file: File | null) => {
+    setImageFile(file);
+    
+    // Create image preview if a file is selected
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      setImagePreview(null);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -52,21 +70,30 @@ export default function AddTodoForm({ onAddTodo }: AddTodoFormProps) {
         title: title.trim(),
         description: description.trim(),
         priority,
-        tags: tags || []
+        tags: tags || [],
+        imageFile,
+        pdfFile
       });
       
-      const newTodo = await createTodo({
-        title: title.trim(),
-        description: description.trim() || undefined,
-        priority,
-        tags: tags.length > 0 ? tags : undefined
-      });
+      const newTodo = await createTodo(
+        {
+          title: title.trim(),
+          description: description.trim() || undefined,
+          priority,
+          tags: tags.length > 0 ? tags : undefined
+        },
+        imageFile,
+        pdfFile
+      );
       
       // Reset form
       setTitle('');
       setDescription('');
       setPriority(Priority.MEDIUM);
       setTags([]);
+      setImageFile(null);
+      setPdfFile(null);
+      setImagePreview(null);
       
       // Add the new todo to the list
       onAddTodo(newTodo);
@@ -174,6 +201,49 @@ export default function AddTodoForm({ onAddTodo }: AddTodoFormProps) {
                 Add Tag
               </Button>
             </Group>
+          </Box>
+
+          {/* Image Upload */}
+          <Box>
+            <Text fw={500} size="sm" mb={5}>Image Thumbnail (JPG, PNG)</Text>
+            <FileInput
+              accept="image/jpeg,image/png"
+              placeholder="Upload an image (optional)"
+              leftSection={<IconPhoto size={16} />}
+              value={imageFile}
+              onChange={handleImageChange}
+              disabled={isSubmitting}
+              clearable
+              size="md"
+            />
+            {imagePreview && (
+              <Box mt="xs">
+                <Text size="xs" c="dimmed" mb={4}>Preview:</Text>
+                <div style={{ maxWidth: '200px' }}>
+                  <Image src={imagePreview} width={200} height={200} fit="contain" style={{ width: 'auto' }} />
+                </div>
+              </Box>
+            )}
+          </Box>
+
+          {/* File Upload */}
+          <Box>
+            <Text fw={500} size="sm" mb={5}>Attachment (PDF only)</Text>
+            <FileInput
+              accept="application/pdf"
+              placeholder="Upload a PDF (optional)"
+              leftSection={<IconFile size={16} />}
+              value={pdfFile}
+              onChange={setPdfFile}
+              disabled={isSubmitting}
+              clearable
+              size="md"
+            />
+            {pdfFile && (
+              <Text size="xs" c="dimmed" mt={4}>
+                Selected file: {pdfFile.name} ({Math.round(pdfFile.size / 1024)} KB)
+              </Text>
+            )}
           </Box>
           
           <Group justify="right" mt="lg">

@@ -403,14 +403,6 @@ export default function TodosPage() {
                             Showing {todos.length} of {totalTodos} tasks 
                             ({activeTab !== "all" ? activeTab : "all"} {selectedPriority ? `/ ${selectedPriority} priority` : ""})
                           </span>
-                          <Badge 
-                            color="blue" 
-                            size="xs" 
-                            variant="outline"
-                            className="flex items-center gap-1"
-                          >
-                            <IconArrowDown size={10} /> Newest first
-                          </Badge>
                         </Group>
                         
                         {selectedPriority && (
