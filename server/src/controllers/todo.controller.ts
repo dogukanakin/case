@@ -10,13 +10,11 @@ import {
   IAuthenticatedRequest, 
   ITodoFilterParams,
   ITodoPaginationResponse,
-  ICreateTodoRequest,
-  IUpdateTodoRequest
 } from '../interfaces/todo.interfaces';
 import { IErrorResponse } from '../interfaces/response.interfaces';
 
 // Get all todos for the logged-in user
-export const getTodos = async (req: IAuthenticatedRequest, res: Response): Promise<void> => {
+export const getTodos = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user?._id;
     

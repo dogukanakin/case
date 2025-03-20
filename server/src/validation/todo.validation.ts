@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Priority } from '../models/todo.model';
+import { Priority } from '../interfaces/todo.interfaces';
 
 // Create Todo validation schema
 export const createTodoSchema = z.object({
