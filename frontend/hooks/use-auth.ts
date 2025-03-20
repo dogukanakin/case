@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { isAuthenticated, getCurrentUser, logoutUser } from '@/lib/auth';
 import { UseAuthReturn } from '@/types/auth';
 
@@ -8,12 +8,16 @@ export function useAuth(): UseAuthReturn {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   const checkAuth = async (): Promise<boolean> => {
     const isAuth = isAuthenticated();
     
     if (!isAuth) {
-      router.push('/login');
+      if (!pathname.includes('/login') && !pathname.includes('/register') && pathname !== '/') {
+        router.push('/login');
+      }
+      setLoading(false);
       return false;
     }
     
@@ -42,13 +46,14 @@ export function useAuth(): UseAuthReturn {
 
   const logout = () => {
     logoutUser();
+    setUsername('');
     router.push('/login');
   };
 
-  // Check authentication on component mount
+  // Check authentication on component mount and when pathname changes
   useEffect(() => {
     checkAuth();
-  }, [router]);
+  }, [pathname]);
 
   return {
     username,

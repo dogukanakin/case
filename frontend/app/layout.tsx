@@ -8,6 +8,7 @@ import '@mantine/notifications/styles.css';
 
 // Client components
 import MantineProviderClient from '../components/providers/mantine-provider';
+import Navbar from '@/components/layout/navbar';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,7 +37,10 @@ export default function RootLayout({
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`} suppressHydrationWarning>
         <MantineProviderClient>
-          {children}
+          <Navbar />
+          <main className="mt-6">
+            {children}
+          </main>
         </MantineProviderClient>
       </body>
     </html>
