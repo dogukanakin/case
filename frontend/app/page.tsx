@@ -3,7 +3,8 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Button } from '@mantine/core'
+import { Button, Container, Title, Text, Paper, ThemeIcon, Stack, Center } from '@mantine/core'
+import { IconList } from '@tabler/icons-react'
 import { isAuthenticated } from '@/lib/auth'
 
 export default function Home() {
@@ -17,40 +18,45 @@ export default function Home() {
   }, [router])
   
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6">
-      <div className="w-full max-w-md space-y-8 p-8 bg-white dark:bg-gray-800 rounded-xl shadow-md">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-gray-900 dark:text-white">
-            To-Do App with ChatGPT
-          </h1>
-          <p className="mt-2 text-gray-600 dark:text-gray-300">
-            Manage your tasks efficiently with AI-powered suggestions
-          </p>
-        </div>
-        
-        <div className="flex flex-col space-y-4 mt-8">
-          <Button 
-            component={Link} 
-            href="/login" 
-            fullWidth 
-            size="md"
-            color="blue"
-          >
-            Login
-          </Button>
-          
-          <Button 
-            component={Link} 
-            href="/register" 
-            fullWidth 
-            size="md"
-            variant="outline"
-            color="blue"
-          >
-            Register
-          </Button>
-        </div>
-      </div>
+    <main className="flex min-h-screen items-center justify-center">
+      <Container size="xs">
+        <Paper shadow="md" p="xl" radius="md" withBorder>
+          <Stack align="center" gap="lg">
+            <ThemeIcon size="xl" radius="xl" color="blue" variant="light">
+              <IconList size={24} />
+            </ThemeIcon>
+            
+            <Title order={2} ta="center" style={{ color: '#228be6' }}>
+              Todo Master
+            </Title>
+            
+            <Text size="sm" c="dimmed" ta="center">
+              Organize your tasks efficiently with AI-powered suggestions
+            </Text>
+            
+            <Button 
+              component={Link} 
+              href="/login" 
+              fullWidth 
+              size="md"
+              color="blue"
+            >
+              Login
+            </Button>
+            
+            <Button 
+              component={Link} 
+              href="/register" 
+              fullWidth 
+              size="md"
+              variant="outline"
+              color="blue"
+            >
+              Register
+            </Button>
+          </Stack>
+        </Paper>
+      </Container>
     </main>
   )
 }
