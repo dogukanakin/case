@@ -3,20 +3,15 @@
 import { Button, Group, Text, Title, Paper, Container } from '@mantine/core';
 import { IconList, IconLogout, IconUser } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
-import { logoutUser } from '@/lib/auth';
 
 interface TodoHeaderProps {
   username: string;
+  onLogout: () => void;
 }
 
-export default function TodoHeader({ username }: TodoHeaderProps) {
+export default function TodoHeader({ username, onLogout }: TodoHeaderProps) {
   const router = useRouter();
   
-  const handleLogout = () => {
-    logoutUser();
-    router.push('/login');
-  };
-
   return (
     <Paper shadow="xs" className="border-b mb-8 py-4 bg-white">
       <Container size="md">
@@ -47,7 +42,7 @@ export default function TodoHeader({ username }: TodoHeaderProps) {
             </Button>
             
             <Button 
-              onClick={handleLogout} 
+              onClick={onLogout} 
               color="red" 
               variant="outline"
               radius="md"

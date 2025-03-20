@@ -1,14 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { Todo, UpdateTodoInput } from '@/types/todo';
-import { updateTodo, deleteTodo } from '@/lib/todo';
-import { ActionIcon, Badge, Button, Checkbox, Group, Paper, Text } from '@mantine/core';
+import { ActionIcon, Badge, Checkbox, Group, Paper, Text } from '@mantine/core';
 import { IconAlarm, IconPencil, IconTag, IconTrash } from '@tabler/icons-react';
 import TodoEditForm from './todo-edit-form';
 import TodoFiles from './todo-files';
 import TodoRecommendation from './todo-recommendation';
 import TodoTags from './todo-tags';
+import { useTodoItem } from '@/hooks/use-todo-item';
 
 interface TodoItemProps {
   todo: Todo;
@@ -17,71 +16,17 @@ interface TodoItemProps {
 }
 
 export default function TodoItem({ todo, onUpdate, onDelete }: TodoItemProps) {
-  const [isEditing, setIsEditing] = useState(false);
-  const [isCompleted, setIsCompleted] = useState(todo.completed);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const getPriorityColor = (priority: string) => {
-    switch(priority) {
-      case 'low': return 'teal';
-      case 'medium': return 'blue';
-      case 'high': return 'red';
-      default: return 'gray';
-    }
-  };
-
-  const handleToggleComplete = async () => {
-    try {
-      setIsLoading(true);
-      const newCompletedState = !isCompleted;
-      setIsCompleted(newCompletedState);
-      
-      const updatedTodo = await updateTodo(todo._id, { 
-        completed: newCompletedState 
-      });
-      
-      onUpdate(updatedTodo);
-    } catch (error) {
-      console.error('Error toggling todo completion:', error);
-      // Revert state on error
-      setIsCompleted(isCompleted);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSaveEdit = async (
-    updateData: UpdateTodoInput, 
-    newImageFile?: File | null, 
-    newAttachmentFile?: File | null
-  ) => {
-    try {
-      const updatedTodo = await updateTodo(
-        todo._id, 
-        updateData, 
-        newImageFile, 
-        newAttachmentFile
-      );
-      
-      onUpdate(updatedTodo);
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Error updating todo:', error);
-      throw error;
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      setIsLoading(true);
-      await deleteTodo(todo._id);
-      onDelete(todo._id);
-    } catch (error) {
-      console.error('Error deleting todo:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use our custom hook
+  const {
+    isEditing,
+    isCompleted,
+    isLoading,
+    setIsEditing,
+    handleToggleComplete,
+    handleSaveEdit,
+    handleDelete,
+    getPriorityColor
+  } = useTodoItem(todo, onUpdate, onDelete);
 
   return (
     <Paper 

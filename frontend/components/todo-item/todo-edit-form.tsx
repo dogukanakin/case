@@ -1,12 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import { Button, Group, Select, TextInput, Textarea } from '@mantine/core';
 import { IconCheck, IconX } from '@tabler/icons-react';
-import { Priority, Todo, UpdateTodoInput } from '@/types/todo';
+import { Todo, UpdateTodoInput } from '@/types/todo';
 import TodoTags from './todo-tags';
 import TodoFiles from './todo-files';
 import TodoRecommendation from './todo-recommendation';
+import { useTodoEditForm } from '@/hooks/use-todo-edit-form';
 
 interface TodoEditFormProps {
   todo: Todo;
@@ -16,42 +16,28 @@ interface TodoEditFormProps {
 }
 
 export default function TodoEditForm({ todo, onSave, onCancel, disabled = false }: TodoEditFormProps) {
-  const [title, setTitle] = useState(todo.title);
-  const [description, setDescription] = useState(todo.description);
-  const [priority, setPriority] = useState(todo.priority);
-  const [tags, setTags] = useState<string[]>(todo.tags);
-  const [removeImage, setRemoveImage] = useState(false);
-  const [removeFile, setRemoveFile] = useState(false);
-  const [newImageFile, setNewImageFile] = useState<File | null>(null);
-  const [newAttachmentFile, setNewAttachmentFile] = useState<File | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  const priorityOptions = [
-    { value: Priority.LOW, label: 'Low' },
-    { value: Priority.MEDIUM, label: 'Medium' },
-    { value: Priority.HIGH, label: 'High' },
-  ];
-
-  const handleSubmit = async () => {
-    try {
-      setIsLoading(true);
-      
-      const updateData: UpdateTodoInput = {
-        title,
-        description,
-        priority,
-        tags,
-        removeImage,
-        removeFile
-      };
-      
-      await onSave(updateData, newImageFile, newAttachmentFile);
-    } catch (error) {
-      console.error('Error saving todo:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  // Use our custom hook
+  const {
+    title,
+    description,
+    priority,
+    tags,
+    removeImage,
+    removeFile,
+    newImageFile,
+    newAttachmentFile,
+    isLoading,
+    priorityOptions,
+    setTitle,
+    setDescription,
+    setPriority,
+    setTags,
+    setRemoveImage,
+    setRemoveFile,
+    setNewImageFile,
+    setNewAttachmentFile,
+    handleSubmit
+  } = useTodoEditForm(todo, onSave);
 
   return (
     <div className="space-y-4">
@@ -76,7 +62,7 @@ export default function TodoEditForm({ todo, onSave, onCancel, disabled = false 
       
       <Select
         value={priority}
-        onChange={(value) => setPriority(value as Priority)}
+        onChange={(value) => setPriority(value as string)}
         data={priorityOptions}
         label="Priority"
         placeholder="Select priority"
