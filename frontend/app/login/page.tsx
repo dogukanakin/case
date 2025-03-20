@@ -1,99 +1,142 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { useForm } from 'react-hook-form'
-import { TextInput, PasswordInput, Button, Title, Text, Paper, Alert } from '@mantine/core'
-import { loginUser, isAuthenticated } from '@/lib/auth'
-import { LoginCredentials } from '@/types/auth'
+import { 
+  TextInput, 
+  PasswordInput, 
+  Button, 
+  Title, 
+  Text, 
+  Paper, 
+  Alert, 
+  Stack,
+  Group,
+  Box,
+  Divider,
+  Container,
+  ThemeIcon
+} from '@mantine/core'
+import { IconLock, IconMail, IconUserPlus, IconLogin } from '@tabler/icons-react'
+import { isAuthenticated } from '@/lib/auth'
+import { useLoginForm } from '@/hooks/use-login-form'
+import { useAuth } from '@/hooks/use-auth'
 
 export default function LoginPage() {
   const router = useRouter()
-  const [error, setError] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { checkAuth } = useAuth();
   
-  // Eğer zaten giriş yapmışsa todos sayfasına yönlendir
+  // Use our custom hook
+  const {
+    error,
+    loading,
+    register,
+    handleSubmit,
+    errors,
+    onSubmit
+  } = useLoginForm();
+  
+  // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated()) {
+      checkAuth(); // Ensure auth state is updated
       router.push('/todos')
     }
-  }, [router])
+  }, [router, checkAuth])
   
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginCredentials>()
-  
-  const onSubmit = async (data: LoginCredentials) => {
-    setLoading(true)
-    setError(null)
-    
+  // Success callback after login
+  const handleFormSubmit = async (data: any) => {
     try {
-      await loginUser(data)
-      router.push('/todos')
-    } catch (err: any) {
-      // Hata mesajını göster
-      setError(err.message)
-    } finally {
-      setLoading(false)
+      await onSubmit(data);
+      await checkAuth(); // Update auth state
+      router.push('/todos');
+    } catch (error) {
+      console.error("Login failed:", error);
     }
-  }
+  };
   
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6">
-      <Paper shadow="md" p="xl" radius="md" className="w-full max-w-md">
-        <Title order={2} className="text-center mb-6">Log in to your account</Title>
-        
-        {error && (
-          <Alert color="red" className="mb-4">
-            {error}
-          </Alert>
-        )}
-        
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <TextInput
-            label="Email"
-            placeholder="your@email.com"
-            required
-            {...register('email', { 
-              required: 'Email is required',
-              pattern: {
-                value: /^\S+@\S+\.\S+$/,
-                message: 'Invalid email address'
-              }
-            })}
-            error={errors.email?.message}
-          />
-          
-          <PasswordInput
-            label="Password"
-            placeholder="Your password"
-            required
-            {...register('password', { 
-              required: 'Password is required',
-              minLength: {
-                value: 6,
-                message: 'Password must be at least 6 characters'
-              }
-            })}
-            error={errors.password?.message}
-          />
-          
-          <Button
-            type="submit"
-            loading={loading}
-            fullWidth
-            color="blue"
-          >
-            Log in
-          </Button>
-        </form>
-        
-        <Text className="text-center mt-4">
-          Don&apos;t have an account?{' '}
-          <Link href="/register" className="text-blue-500 hover:underline">
-            Sign up
-          </Link>
-        </Text>
-      </Paper>
-    </main>
+    <div className="flex min-h-screen items-center justify-center">
+      <Container size="xs">
+        <Paper shadow="md" p="lg" radius="md" withBorder>
+          <Stack gap="md">
+            <Group justify="center" mb="md">
+              <ThemeIcon size="xl" radius="xl" color="blue" variant="light">
+                <IconLogin size={24} />
+              </ThemeIcon>
+            </Group>
+            
+            <Title order={2} ta="center">Welcome back</Title>
+            <Text c="dimmed" size="sm" ta="center">
+              Sign in to access your todos and stay organized
+            </Text>
+            
+            {error && (
+              <Alert color="red" title="Login failed">
+                {error}
+              </Alert>
+            )}
+            
+            <form onSubmit={handleSubmit(handleFormSubmit)}>
+              <Stack gap="md">
+                <TextInput
+                  label="Email"
+                  type="email"
+                  placeholder="your@email.com"
+                  required
+                  leftSection={<IconMail size={16} />}
+                  {...register('email', { 
+                    required: 'Email is required',
+                    pattern: {
+                      value: /^\S+@\S+\.\S+$/,
+                      message: 'Invalid email address'
+                    }
+                  })}
+                  error={errors.email?.message}
+                />
+                
+                <PasswordInput
+                  label="Password"
+                  placeholder="Your password"
+                  required
+                  leftSection={<IconLock size={16} />}
+                  {...register('password', { 
+                    required: 'Password is required',
+                    minLength: {
+                      value: 6,
+                      message: 'Password must be at least 6 characters'
+                    }
+                  })}
+                  error={errors.password?.message}
+                />
+                
+                <Button
+                  type="submit"
+                  loading={loading}
+                  fullWidth
+                  color="blue"
+                  size="md"
+                  mt="md"
+                >
+                  Log in
+                </Button>
+              </Stack>
+            </form>
+            
+            <Divider label="Don't have an account?" labelPosition="center" my="md" />
+            
+            <Button
+              variant="subtle"
+              color="gray"
+              fullWidth
+              leftSection={<IconUserPlus size={16} />}
+              onClick={() => router.push('/register')}
+            >
+              Register
+            </Button>
+          </Stack>
+        </Paper>
+      </Container>
+    </div>
   )
 } 

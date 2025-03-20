@@ -1,7 +1,7 @@
 'use client';
 
-import { Button, Card, Title, Alert, PasswordInput } from '@mantine/core';
-import { IconCheck } from '@tabler/icons-react';
+import { Button, Card, Title, Alert, PasswordInput, Stack, ThemeIcon } from '@mantine/core';
+import { IconCheck, IconLock } from '@tabler/icons-react';
 import { usePasswordChange } from '@/hooks/use-password-change';
 import { PasswordChangeFormProps } from '@/types/auth';
 
@@ -18,76 +18,81 @@ export default function PasswordChangeForm({ onUserDataUpdate }: PasswordChangeF
   } = usePasswordChange(onUserDataUpdate);
 
   return (
-    <Card shadow="sm" p="lg" radius="md" withBorder className="mb-4">
-      <Title order={3} className="mb-4">Şifre Değiştir</Title>
+    <Card shadow="sm" p="lg" radius="md" withBorder>
+      <Title order={3} mb="lg">Change Password</Title>
       
       {error && (
-        <Alert color="red" className="mb-4">
+        <Alert color="red" mb="md">
           {error}
         </Alert>
       )}
       
       {success && (
-        <Alert color="green" className="mb-4">
+        <Alert color="green" mb="md">
           {success}
         </Alert>
       )}
       
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <PasswordInput
-          label="Mevcut Şifre"
-          placeholder="Mevcut şifrenizi girin"
-          required
-          {...register('currentPassword', { 
-            required: 'Mevcut şifre gerekli',
-            minLength: {
-              value: 6,
-              message: 'Şifre en az 6 karakter olmalıdır'
-            }
-          })}
-          error={errors.currentPassword?.message}
-        />
-        
-        <PasswordInput
-          label="Yeni Şifre"
-          placeholder="Yeni şifrenizi girin"
-          required
-          {...register('newPassword', { 
-            required: 'Yeni şifre gerekli',
-            minLength: {
-              value: 6,
-              message: 'Şifre en az 6 karakter olmalıdır'
-            }
-          })}
-          error={errors.newPassword?.message}
-        />
-        
-        <PasswordInput
-          label="Yeni Şifre (Tekrar)"
-          placeholder="Yeni şifrenizi tekrar girin"
-          required
-          {...register('newPasswordConfirm', { 
-            required: 'Şifre tekrarı gerekli',
-            minLength: {
-              value: 6,
-              message: 'Şifre en az 6 karakter olmalıdır'
-            },
-            validate: (value: string) => {
-              return watch('newPassword') === value || 'Şifreler eşleşmiyor'
-            }
-          })}
-          error={errors.newPasswordConfirm?.message}
-        />
-        
-        <Button
-          type="submit"
-          loading={isSubmitting}
-          fullWidth
-          color="blue"
-          leftSection={<IconCheck size={16} />}
-        >
-          Şifreyi Değiştir
-        </Button>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Stack gap="md">
+          <PasswordInput
+            label="Current Password"
+            placeholder="Enter your current password"
+            required
+            leftSection={<IconLock size={16} />}
+            {...register('currentPassword', { 
+              required: 'Current password is required',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters'
+              }
+            })}
+            error={errors.currentPassword?.message}
+          />
+          
+          <PasswordInput
+            label="New Password"
+            placeholder="Enter your new password"
+            required
+            leftSection={<IconLock size={16} />}
+            {...register('newPassword', { 
+              required: 'New password is required',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters'
+              }
+            })}
+            error={errors.newPassword?.message}
+          />
+          
+          <PasswordInput
+            label="Confirm New Password"
+            placeholder="Enter your new password again"
+            required
+            leftSection={<IconLock size={16} />}
+            {...register('newPasswordConfirm', { 
+              required: 'Password confirmation is required',
+              minLength: {
+                value: 6,
+                message: 'Password must be at least 6 characters'
+              },
+              validate: (value: string) => {
+                return watch('newPassword') === value || 'Passwords do not match'
+              }
+            })}
+            error={errors.newPasswordConfirm?.message}
+          />
+          
+          <Button
+            type="submit"
+            loading={isSubmitting}
+            fullWidth
+            color="blue"
+            leftSection={<IconCheck size={16} />}
+          >
+            Change Password
+          </Button>
+        </Stack>
       </form>
     </Card>
   );

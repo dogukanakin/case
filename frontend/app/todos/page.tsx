@@ -1,12 +1,11 @@
 'use client'
 
 import React from 'react'
-import { Alert, Container, Loader, Paper, Box, Transition, Space } from '@mantine/core'
-import { IconAlertCircle } from '@tabler/icons-react'
+import { Alert, Container, Loader, Paper, Box, Transition, Space, Title, Text, Stack, Group } from '@mantine/core'
+import { IconAlertCircle, IconList, IconNotes } from '@tabler/icons-react'
 import AddTodoForm from '@/components/add-todo-form'
 
 // Import our components
-import TodoHeader from '@/components/todos/todo-header'
 import TodoSearch from '@/components/todos/todo-search'
 import TodoFilters from '@/components/todos/todo-filters'
 import TodoList from '@/components/todos/todo-list'
@@ -20,10 +19,8 @@ import { useTodos } from '@/hooks/use-todos'
 export default function TodosPage() {
   // Use our auth hook
   const { 
-    username, 
     loading: authLoading, 
     error: authError,
-    logout 
   } = useAuth();
   
   // Use our todos hook
@@ -58,87 +55,86 @@ export default function TodosPage() {
   // Initial loading state
   if (loading && todos.length === 0) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gray-50">
+      <div className="flex min-h-screen items-center justify-center">
         <Loader size="xl" color="blue" />
       </div>
     );
   }
   
   return (
-    <main className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100">
-      {/* Header Component */}
-      <TodoHeader username={username} onLogout={logout} />
-      
-      <Container size="md" className="pb-12">
-        {/* Add Todo Form */}
-        <AddTodoForm onAddTodo={handleAddTodo} />
-        
-        {/* Search Component */}
-        <TodoSearch 
-          searchQuery={searchQuery}
-          onSearchChange={handleSearchChange}
-          onClearSearch={handleClearSearch}
-        />
-        
-        <Space h="md" />
-        
-        {/* Error Alert */}
-        {error && (
-          <Alert 
-            icon={<IconAlertCircle size={16} />}
-            title="Error"
-            color="red"
-            className="mb-4"
-          >
-            {error}
-          </Alert>
-        )}
-        
-        <Transition mounted={true} transition="fade" duration={400}>
-          {(styles) => (
-            <Box style={styles}>
-              <Paper withBorder p="md" mb="md" radius="md">
-                {/* Filters Component */}
-                <TodoFilters
-                  activeTab={activeTab}
-                  selectedPriority={selectedPriority}
-                  totalAll={totalAll}
-                  totalActive={totalActive}
-                  totalCompleted={totalCompleted}
-                  onTabChange={handleTabChange}
-                  onPriorityChange={handlePriorityChange}
-                />
-                
-                <div className="mt-2">
-                  {/* Todo List Component */}
-                  <TodoList
-                    todos={todos}
-                    loading={todosLoading}
+    <main className="min-h-screen py-6 bg-gradient-to-b from-gray-50 to-gray-100">
+      <Container size="md">
+        <Stack gap="lg">
+          {/* Add Todo Form */}
+          <Paper shadow="sm" p="md" radius="md" withBorder>
+            <AddTodoForm onAddTodo={handleAddTodo} />
+          </Paper>
+          
+          {/* Search Component */}
+          <TodoSearch 
+            searchQuery={searchQuery}
+            onSearchChange={handleSearchChange}
+            onClearSearch={handleClearSearch}
+          />
+          
+          {/* Error Alert */}
+          {error && (
+            <Alert 
+              icon={<IconAlertCircle size={16} />}
+              title="Error"
+              color="red"
+              variant="filled"
+            >
+              {error}
+            </Alert>
+          )}
+          
+          <Transition mounted={true} transition="fade" duration={400}>
+            {(styles) => (
+              <Box style={styles}>
+                <Paper shadow="sm" withBorder p="md" radius="md">
+                  {/* Filters Component */}
+                  <TodoFilters
                     activeTab={activeTab}
                     selectedPriority={selectedPriority}
-                    totalTodos={totalTodos}
-                    searchQuery={searchQuery}
-                    onUpdateTodo={handleUpdateTodo}
-                    onDeleteTodo={handleDeleteTodo}
-                    onClearPriority={clearPriority}
+                    totalAll={totalAll}
+                    totalActive={totalActive}
+                    totalCompleted={totalCompleted}
+                    onTabChange={handleTabChange}
+                    onPriorityChange={handlePriorityChange}
                   />
                   
-                  {/* Pagination Component */}
-                  <TodoPagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                  />
-                </div>
-              </Paper>
-            </Box>
+                  <Stack gap="md" mt="md">
+                    {/* Todo List Component */}
+                    <TodoList
+                      todos={todos}
+                      loading={todosLoading}
+                      activeTab={activeTab}
+                      selectedPriority={selectedPriority}
+                      totalTodos={totalTodos}
+                      searchQuery={searchQuery}
+                      onUpdateTodo={handleUpdateTodo}
+                      onDeleteTodo={handleDeleteTodo}
+                      onClearPriority={clearPriority}
+                    />
+                    
+                    {/* Pagination Component */}
+                    <TodoPagination
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </Stack>
+                </Paper>
+              </Box>
+            )}
+          </Transition>
+          
+          {/* Empty State Component */}
+          {todos.length === 0 && !loading && !searchQuery && (
+            <TodoEmptyState />
           )}
-        </Transition>
-        
-        {/* Empty State Component */}
-        {todos.length === 0 && !loading && !searchQuery && (
-          <TodoEmptyState />
-        )}
+        </Stack>
       </Container>
     </main>
   )
