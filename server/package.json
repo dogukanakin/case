@@ -6,6 +6,7 @@
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "seed:users": "ts-node src/scripts/seed-users.ts",
     "kill": "sudo npx kill-port 3000 5000 5001 "
   },
   "keywords": [],

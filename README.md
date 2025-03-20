@@ -55,6 +55,27 @@ To stop the application:
 docker-compose down
 ```
 
+## Creating Test Users and Data
+
+The application includes scripts to create test users and sample todo data:
+
+1. Make sure your database is running and you have set up your `.env` file
+2. To create test users only:
+   ```bash
+   cd server
+   npm run seed:users
+   ```
+3. To create both test users and sample todos:
+   ```bash
+   cd server
+   npm run seed
+   ```
+
+This will create the following test accounts:
+- Admin User: admin@example.com / admin123456
+- Test User: test@example.com / test123456
+- Demo User: demo@example.com / demo123456
+
 ## Environment Variables
 
 You can configure the application by editing the `.env` file. Important settings:
