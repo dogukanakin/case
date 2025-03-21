@@ -5,6 +5,7 @@ import path from 'path';
 import connectDB from './config/db';
 import authRoutes from './routes/auth.routes';
 import todoRoutes from './routes/todo.routes';
+import healthRoutes from './routes/health.routes';
 
 // Load environment variables
 dotenv.config();
@@ -27,6 +28,7 @@ app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/todos', todoRoutes);
+app.use('/api/health', healthRoutes);
 
 // Basic health check route
 app.get('/', (req: Request, res: Response) => {

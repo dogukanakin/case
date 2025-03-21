@@ -1,0 +1,15 @@
+{
+  "name": "testt",
+  "version": "1.0.0",
+  "description": "Root package for Railway deployment",
+  "private": true,
+  "scripts": {
+    "install": "cd server && npm install",
+    "build": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "postinstall": "cd server && npm run build"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+} 
