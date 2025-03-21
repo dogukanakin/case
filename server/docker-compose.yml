@@ -10,13 +10,13 @@ services:
         - NODE_ENV=development
     ports:
       - "5001:5000"
-    environment:
-      - NODE_ENV=development
+   environment:
+      - NODE_ENV=production
       - PORT=5000
-      - MONGODB_URI=mongodb+srv://dogukannakin:KQg7XLdzN19mpKWo@cluster0.2remq.mongodb.net/todoapp?retryWrites=true&w=majority&connectTimeoutMS=30000&socketTimeoutMS=45000
-      - JWT_SECRET=YWkk9ZUndoewS7dRbvaX4yOyYZapn2C7ihtDJ6n4kNk=
-      - JWT_EXPIRES_IN=7d
-      - OPENAI_API_KEY=sk-m2f-kHMSAzjSxKXJiK2MTekH10KWmUmkFEQ_H3ZN7iT3BlbkFJtccwF2okbZE71plN6EBkseNjSGePXxNsmBS8bfvW8A
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRES_IN=${JWT_EXPIRES_IN}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
     depends_on:
       - mongodb
     volumes:
